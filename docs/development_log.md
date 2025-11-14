@@ -2,7 +2,8 @@
 
 **Project:** DLLM-Delta-Compute  
 **Branch:** PoC-1  
-**Start Date:** November 14, 2025
+**Start Date:** November 14, 2025  
+**Current Status:** ~80% complete - Ready for GPU testing (Nov 14, 06:30 EST)
 
 ---
 
@@ -11,44 +12,90 @@
 This document tracks the implementation of delta-compute acceleration and L2C-style caching for Dream-7B, following the master_plan.md (v1).
 
 **Implementation Phases:**
-- **POC v1a:** P0 (Baseline) + P1 (Teacher Traces)
-- **POC v1b:** P2-v1b (Sequence-level Early Stopping) OR L2C Phase A (FFN Caching)
+- **POC v1a:** P0 (Baseline) + P1 (Teacher Traces) - ✅ IMPLEMENTED
+- **POC v1b:** P2-v1b (Sequence-level Early Stopping) + L2C Phase A (FFN Caching) - ✅ IMPLEMENTED
+
+---
+
+## Recent Session Summary (Nov 14, 2025 - 06:30 EST)
+
+### Completed Work
+
+1. **Core Infrastructure (✅ Complete)**
+   - `src/tracing.py`: TraceCollector with layer/step statistics
+   - Modified `DreamDecoderLayer` and `DreamBaseModel` for tracing + caching
+   - Extended `DreamGenerationConfig` with all delta-compute parameters
+   - Integrated TraceCollector into `_sample()` loop
+
+2. **Generation Logic (✅ Complete)**
+   - Modified `generation_utils.py._sample()` to:
+     - Initialize TraceCollector when `trace_teacher=True`
+     - Manage FFN caches with alternating schedule
+     - Implement P2 early stopping (confidence + entropy thresholds)
+     - Save traces to disk
+   - Modified `DreamModel.forward()` to propagate delta-compute params
+
+3. **Eval Integration (✅ Complete)**
+   - Extended `diffllm.py` to parse delta-compute params from model_args
+   - Pass parameters through to `diffusion_generate()`
+
+4. **Testing Scripts (✅ Complete)**
+   - `test_poc_v1a.py`: Quick 3-mode validation script
+   - `slurm_test_poc.sh`: SLURM job for 2hr GPU quick test
+   - `slurm_eval_gsm8k.sh`: SLURM job for full GSM8K eval (12hr)
+   - `plot_traces.py`: Visualization script for trace analysis
+   - `TESTING_GUIDE.md`: Comprehensive usage documentation
+
+5. **Git Commits (✅ Complete)**
+   - Dream submodule: commit b19b741 (generation_utils + model + eval)
+   - Main repo: commit 16fb4bd (test scripts + SLURM jobs)
+
+### Ready for GPU Testing
+
+**Next Steps:**
+1. Submit `slurm_test_poc.sh` for quick validation
+2. Verify teacher parity (baseline == traced baseline)
+3. Run full GSM8K evaluation in all modes
+4. Analyze traces and optimize cache schedules
+5. Measure speedups and quality trade-offs
 
 ---
 
 ## Development Roadmap
 
-### Phase 0: Setup ✅ / ⏳ / ❌
+### Phase 0: Setup ✅ COMPLETE
 
-- [ ] Create conda environment `dcllm`
-- [ ] Install dependencies (torch 2.5.1, transformers 4.46.2)
-- [ ] Verify Dream model loads correctly
-- [ ] Setup git tracking for changes
+- [x] Create conda environment `dcllm`
+- [x] Install dependencies (torch 2.5.1, transformers 4.46.2)
+- [x] Verify Dream model loads correctly
+- [x] Setup git tracking for changes
 
-### Phase 1: P0 - Baseline Teacher
+### Phase 1: P0 - Baseline Teacher ⏳ PENDING GPU TEST
 
 **Goal:** Establish reproducible baseline on GSM8K CoT
 
 **Tasks:**
-- [ ] Run `external/Dream/eval_instruct/eval.sh` on GSM8K
-- [ ] Record: EM accuracy, latency (mean/p50/p90), diffusion_steps=256
-- [ ] Verify `delta_mode=none, cache_mode=none` works
+- [x] Verify `delta_mode=none, cache_mode=none` config exists
+- [x] Create SLURM eval script
+- [ ] Run full GSM8K evaluation
+- [ ] Record: EM accuracy, latency (mean/p50/p90), diffusion_steps
 
 **Expected Output:**
 - Baseline metrics JSON
-- Verification that unmodified Dream eval works
+- Wall-clock time and memory usage
 
-### Phase 2: P1 - Teacher Traces
+### Phase 2: P1 - Teacher Traces ✅ IMPLEMENTED
 
 **Goal:** Collect per-step/per-layer statistics to inform gating and caching
 
-**Implementation Plan:**
+**Implementation:**
 
-1. **Add tracing infrastructure:**
-   - [ ] Modify `DreamDecoderLayer` to support optional tracing
-   - [ ] Add hooks to compute:
+1. **Tracing infrastructure:** ✅
+   - [x] Created `src/tracing.py` with `TraceCollector` class
+   - [x] Modified `DreamDecoderLayer` to record:
      - FFN output L2 norm
-     - Cosine similarity between consecutive steps
+     - Cosine similarity (skip vs residual)
+     - Per-layer runtime
      - Per-layer timing
    - [ ] Create `TraceCollector` class to aggregate stats
 
