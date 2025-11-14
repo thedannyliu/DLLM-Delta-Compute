@@ -170,10 +170,12 @@ class TraceCollector:
         return self.stats
     
     def save(self, filepath: str):
-        """Save statistics to JSON file."""
+        """Save statistics to file (JSON or PyTorch format based on extension)."""
         if not self.enabled:
             return
             
+        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+        
         # Convert to serializable format
         data = {
             'metadata': {
@@ -189,17 +191,27 @@ class TraceCollector:
             for step_idx, stats in step_dict.items():
                 data['stats'][layer_idx][step_idx] = asdict(stats)
         
-        Path(filepath).parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, 'w') as f:
-            json.dump(data, f, indent=2)
-        
-        print(f"✓ Saved trace statistics to {filepath}")
+        # Save in appropriate format
+        if filepath.endswith('.pt') or filepath.endswith('.pth'):
+            # PyTorch format (can be loaded with torch.load)
+            torch.save(data, filepath)
+            print(f"✓ Saved trace statistics to {filepath} (PyTorch format)")
+        else:
+            # JSON format (default)
+            with open(filepath, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"✓ Saved trace statistics to {filepath} (JSON format)")
     
     @staticmethod
     def load(filepath: str) -> 'TraceCollector':
-        """Load statistics from JSON file."""
-        with open(filepath, 'r') as f:
-            data = json.load(f)
+        """Load statistics from file (JSON or PyTorch format based on extension)."""
+        if filepath.endswith('.pt') or filepath.endswith('.pth'):
+            # PyTorch format
+            data = torch.load(filepath)
+        else:
+            # JSON format
+            with open(filepath, 'r') as f:
+                data = json.load(f)
         
         collector = TraceCollector(
             enabled=False,  # Don't collect new data

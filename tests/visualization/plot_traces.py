@@ -13,15 +13,22 @@ from pathlib import Path
 
 def plot_ffn_norm_heatmap(trace_data, output_path):
     """Plot layer x step heatmap of FFN output norms"""
-    layer_stats = trace_data['layer_stats']
-    num_layers = len(layer_stats)
-    num_steps = len(layer_stats[0])
+    stats_dict = trace_data['stats']
+    num_layers = trace_data['metadata']['num_layers']
+    
+    # Find max step index
+    max_step = 0
+    for layer_data in stats_dict.values():
+        for step_idx in layer_data.keys():
+            max_step = max(max_step, int(step_idx))
+    num_steps = max_step + 1
     
     # Extract FFN norms
     ffn_norms = np.zeros((num_layers, num_steps))
-    for layer_idx in range(num_layers):
-        for step_idx in range(num_steps):
-            stat = layer_stats[layer_idx][step_idx]
+    for layer_idx_str, step_dict in stats_dict.items():
+        layer_idx = int(layer_idx_str)
+        for step_idx_str, stat in step_dict.items():
+            step_idx = int(step_idx_str)
             ffn_norms[layer_idx, step_idx] = stat['ffn_output_norm']
     
     # Plot
