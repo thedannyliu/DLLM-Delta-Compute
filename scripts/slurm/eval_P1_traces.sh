@@ -22,7 +22,7 @@ echo "Conda env: $CONDA_DEFAULT_ENV"
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 
 # Install missing dependencies if needed
-pip install -q sacrebleu evaluate scikit-learn sqlitedict word2number 2>&1 | grep -v "Requirement already satisfied" || true
+pip install -q sacrebleu evaluate scikit-learn sqlitedict word2number pytablewriter 2>&1 | grep -v "Requirement already satisfied" || true
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 

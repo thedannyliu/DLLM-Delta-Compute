@@ -1,0 +1,28 @@
+{
+  "log_file": "experiments/P0_baseline/logs/gsm8k_baseline_3550147.out",
+  "extracted_at": "2025-11-14T07:11:23.531743",
+  "accuracy": {
+    "correct": 0,
+    "total": 5,
+    "accuracy": 0.0
+  },
+  "timing": {
+    "start": "Fri Nov 14 07:01:54 EST 2025",
+    "end": "Fri Nov 14 07:06:42 EST 2025",
+    "duration_seconds": 288.0,
+    "duration_minutes": 4.8
+  },
+  "resources": {
+    "cput": "00:05:02",
+    "vmem": "0",
+    "walltime": "00:05:02",
+    "mem": "9079148K",
+    "energy_used": "0"
+  },
+  "config": {
+    "pretrained": "Dream-org/Dream-v0-Instruct-7B",
+    "delta_mode": "none",
+    "cache_mode": "none",
+    "trace_teacher": "False"
+  }
+}
