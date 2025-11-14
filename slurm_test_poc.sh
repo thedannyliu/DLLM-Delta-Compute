@@ -1,18 +1,24 @@
 #!/bin/bash
 #SBATCH -Jdream_test           # Job name
-#SBATCH -N1 --gres=gpu:H100:1  # 1 node, 1 H100 GPU
-#SBATCH --mem-per-gpu=40G      # Memory per GPU
-#SBATCH -t0-02:00:00           # 2 hours time limit
-#SBATCH -otest_poc_%j.out      # Standard output log
-#SBATCH -qinfinity             # Queue name
-#SBATCH -A GT-hl94             # Account
+#SBATCH -p ice-gpu
+#SBATCH --gres=gpu:h100:1
+#SBATCH -c 8
+#SBATCH --mem=80G
+#SBATCH -t 08:00:00
+#SBATCH -o logs/dream_test_poc_%j.out      # Standard output log
 
 # Load modules
 module load cuda/12.1
+module load anaconda3/2023.03
 
 # Activate conda environment
-source ~/.bashrc
+source /usr/local/pace-apps/manual/packages/anaconda3/2023.03/etc/profile.d/conda.sh
 conda activate dcllm
+
+# Verify environment
+echo "Python: $(which python)"
+echo "Conda env: $CONDA_DEFAULT_ENV"
+python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}')"
 
 # Run test
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
