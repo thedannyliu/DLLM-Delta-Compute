@@ -64,4 +64,4 @@ echo "Traces saved to: $TRACE_DIR"
 # Generate visualizations
 echo "Generating trace visualizations..."
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
-python tests/visualization/plot_traces.py $TRACE_DIR/*.pt --output-dir docs/reports/P1_traces/
+python tests/visualization/plot_traces.py $TRACE_DIR/*.pt --output_dir docs/reports/P1_traces/
