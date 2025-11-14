@@ -1,0 +1,3 @@
+[submodule "external/Dream"]
+	path = external/Dream
+	url = git@github.com:thedannyliu/Dream.git
