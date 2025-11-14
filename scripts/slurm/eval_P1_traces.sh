@@ -44,15 +44,15 @@ cd external/Dream/eval_instruct
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=$MODEL_PATH,delta_mode=none,cache_mode=none,trace_teacher=True,trace_output_dir=$TRACE_DIR \
+    --model_args pretrained=$MODEL_PATH,delta_mode=none,cache_mode=none,trace_teacher=True,trace_output_dir=../../../../$TRACE_DIR \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
     --limit 100 \
     --seed 42 \
-    --output_path $OUTPUT_DIR/results.json \
+    --output_path ../../../../$OUTPUT_DIR/results.json \
     --log_samples \
-    2>&1 | tee $OUTPUT_DIR/eval.log
+    2>&1 | tee ../../../../$OUTPUT_DIR/eval.log
 
 echo "Evaluation completed at $(date)"
 echo "Results saved to: $OUTPUT_DIR"
