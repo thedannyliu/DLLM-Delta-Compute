@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -Jdream_PhaseA          # Job name
-#SBATCH -N1 --gres=gpu:a100:1   # 1 node, 1 H100 GPU
-#SBATCH --mem-per-gpu=80G       # Memory per GPU
+#SBATCH -N1 --gres=gpu:h100:1   # 1 node, 1 H100 GPU
+#SBATCH --mem-per-gpu=40G       # Memory per GPU
 #SBATCH -t0-12:00:00            # 12 hours time limit
 #SBATCH -o experiments/PhaseA_caching/logs/gsm8k_caching_%j.out
-#SBATCH -p coc-gpu              # Queue name
-#SBATCH -A coc              # Account
+#SBATCH -p ice-gpu              # Queue name
+              # Account
 
 # Load modules
 module load cuda/12.1
@@ -27,7 +27,7 @@ pip install -q sacrebleu evaluate scikit-learn sqlitedict word2number 2>&1 | gre
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 
 # Setup
-MODEL_PATH="hkust-nlp/Dream-7B"
+MODEL_PATH="Dream-org/Dream-v0-Instruct-7B"
 OUTPUT_DIR="experiments/PhaseA_caching/results/gsm8k_$(date +%Y%m%d_%H%M%S)"
 mkdir -p $OUTPUT_DIR
 
@@ -39,6 +39,8 @@ echo "Started at: $(date)"
 # Run with FFN caching enabled (layers 0-3)
 # Small-scale test: 100 samples, fixed seed for reproducibility
 cd external/Dream/eval_instruct
+\n# Create output directory before tee
+mkdir -p "../../../../$OUTPUT_DIR"
 
 python -m lm_eval \
     --model diffllm \

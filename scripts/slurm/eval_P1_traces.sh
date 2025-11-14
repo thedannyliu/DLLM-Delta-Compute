@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -Jdream_P1              # Job name
-#SBATCH -N1 --gres=gpu:a100:1   # 1 node, 1 H100 GPU
-#SBATCH --mem-per-gpu=80G       # Memory per GPU
+#SBATCH -N1 --gres=gpu:h100:1   # 1 node, 1 H100 GPU
+#SBATCH --mem-per-gpu=40G       # Memory per GPU
 #SBATCH -t0-12:00:00            # 12 hours time limit
 #SBATCH -o experiments/P1_traces/logs/gsm8k_traces_%j.out
-#SBATCH -p coc-gpu              # Queue name
-#SBATCH -A coc              # Account
+#SBATCH -p ice-gpu              # Queue name
+              # Account
 
 # Load modules
 module load cuda/12.1
@@ -27,9 +27,10 @@ pip install -q sacrebleu evaluate scikit-learn sqlitedict word2number 2>&1 | gre
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 
 # Setup
-MODEL_PATH="hkust-nlp/Dream-7B"
+MODEL_PATH="Dream-org/Dream-v0-Instruct-7B"
 OUTPUT_DIR="experiments/P1_traces/results/gsm8k_$(date +%Y%m%d_%H%M%S)"
 TRACE_DIR="experiments/P1_traces/traces"
+mkdir -p $TRACE_DIR
 mkdir -p $OUTPUT_DIR $TRACE_DIR
 
 echo "=== P1 Teacher Trace Collection ==="
@@ -41,6 +42,8 @@ echo "Started at: $(date)"
 # Run with trace collection enabled
 # Small-scale test: 100 samples, fixed seed for reproducibility
 cd external/Dream/eval_instruct
+\n# Create output directory before tee
+mkdir -p "../../../../$OUTPUT_DIR"
 
 python -m lm_eval \
     --model diffllm \
