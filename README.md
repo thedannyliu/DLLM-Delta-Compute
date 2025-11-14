@@ -22,21 +22,21 @@ cd DLLM-Delta-Compute
 ### 2. Setup Environment
 ```bash
 # On PACE ICE cluster
-./setup_env.sh
+bash scripts/setup/setup_env.sh
 
 # Or manually:
 conda create -n dcllm python=3.10
 conda activate dcllm
-pip install torch==2.5.1 transformers==4.46.2 accelerate matplotlib seaborn
+pip install -r requirements.txt
 ```
 
 ### 3. Run Quick Test
 ```bash
-# CPU test (development)
-python test_poc_v1a.py --device cpu
-
 # GPU test (submit SLURM job)
-sbatch slurm_test_poc.sh
+sbatch scripts/slurm/slurm_test_poc.sh
+
+# Or run unit tests locally
+python tests/unit/test_infrastructure.py
 ```
 
 ### 4. Full Evaluation
@@ -46,28 +46,37 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for comprehensive instructions.
 
 ```
 DLLM-Delta-Compute/
-├── src/
-│   ├── tracing.py               # TraceCollector for P1 statistics
+├── src/                         # Core infrastructure
+│   ├── tracing.py              # TraceCollector for P1 statistics
 │   └── __init__.py
-├── external/
-│   ├── Dream/                   # Dream-7B submodule (modified)
-│   │   ├── modeling/
-│   │   │   ├── modeling_dream.py      # Modified with tracing/caching hooks
-│   │   │   └── generation_utils.py    # Extended config & _sample loop
-│   │   └── eval_instruct/
-│   │       └── lm_eval/models/diffllm.py  # Eval wrapper with model_args
-│   └── learning-to-cache/       # Reference L2C implementation
-├── docs/
-│   ├── master_plan.md           # Project specification
-│   ├── development_log.md       # Implementation progress
-│   └── implementation_issues.md # Known issues & blockers
-├── test_poc_v1a.py              # Quick 3-mode validation
-├── plot_traces.py               # Trace visualization
-├── slurm_test_poc.sh            # Quick GPU test (2hr)
-├── slurm_eval_gsm8k.sh          # Full GSM8K eval (12hr)
-├── TESTING_GUIDE.md             # Comprehensive usage guide
-└── README.md                    # This file
+├── tests/                       # All test scripts
+│   ├── unit/                   # Unit tests (GPU validation, infrastructure)
+│   ├── integration/            # Integration tests (full workflows)
+│   └── visualization/          # Trace plotting and analysis
+├── scripts/                     # Executable scripts
+│   ├── slurm/                  # SLURM batch jobs (eval_P0_baseline.sh, etc.)
+│   ├── setup/                  # Environment setup
+│   └── eval/                   # Local evaluation scripts
+├── experiments/                 # Experiment outputs (organized by phase)
+│   ├── P0_baseline/            # Baseline experiments
+│   ├── P1_traces/              # Trace collection
+│   ├── P2_early_stop/          # Early stopping
+│   └── PhaseA_caching/         # FFN caching
+│   # Each contains: logs/, traces/, results/, configs/
+├── docs/                        # Documentation
+│   ├── master_plan.md          # **PRIMARY**: Project specification
+│   ├── implementation_summary.md  # Implementation details
+│   ├── reports/                # Validation reports
+│   └── archive/                # Historical docs
+├── external/                    # External dependencies (git submodules)
+│   ├── Dream/                  # Dream-7B (modified for delta-compute)
+│   └── learning-to-cache/      # L2C reference implementation
+├── requirements.txt             # Python dependencies
+├── TESTING_GUIDE.md            # Testing instructions
+└── README.md                   # This file
 ```
+
+For detailed structure and organization rules, see [docs/master_plan.md](docs/master_plan.md).
 
 ## Features
 
@@ -122,33 +131,41 @@ This project uses a **submodule workflow**:
 
 ## Testing
 
-### Quick Validation (2 hours)
+### Quick Validation (8 hours)
 ```bash
-sbatch slurm_test_poc.sh
-# Check: test_traces/ for saved traces
-# Check: test_poc_*.out for logs
+sbatch scripts/slurm/slurm_test_poc.sh
+# Check: experiments/P0_baseline/logs/ for SLURM output
 ```
 
-### Full GSM8K Eval (12 hours)
+### Phase-Specific Evaluation (12 hours each)
 ```bash
-# Baseline
-sbatch slurm_eval_gsm8k.sh hkust-nlp/Dream-7B baseline
+# P0: Baseline
+sbatch scripts/slurm/eval_P0_baseline.sh
 
-# With caching
-sbatch slurm_eval_gsm8k.sh hkust-nlp/Dream-7B cache
+# P1: Trace Collection
+sbatch scripts/slurm/eval_P1_traces.sh
+
+# P2: Early Stopping
+sbatch scripts/slurm/eval_P2_early_stop.sh
+
+# Phase A: FFN Caching
+sbatch scripts/slurm/eval_PhaseA_caching.sh
 ```
 
 ### Visualization
 ```bash
-python plot_traces.py test_traces/trace_sample_*.pt --output_dir ./plots
+python tests/visualization/plot_traces.py \
+  experiments/P1_traces/traces/*.pt \
+  --output-dir docs/reports/P1_traces/
 ```
 
 ## Documentation
 
-- [TESTING_GUIDE.md](TESTING_GUIDE.md): How to run tests and evaluations
-- [docs/master_plan.md](docs/master_plan.md): Project specification and phases
-- [docs/development_log.md](docs/development_log.md): Implementation progress tracking
-- [docs/implementation_issues.md](docs/implementation_issues.md): Known blockers
+- **[docs/master_plan.md](docs/master_plan.md)**: ⭐ Primary specification (P0-P4, Phase A-C, progress tracking)
+- **[docs/implementation_summary.md](docs/implementation_summary.md)**: Implementation details and architecture
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)**: How to run tests and evaluations
+- **[docs/reports/](docs/reports/)**: Validation and evaluation reports
+- **[docs/README.md](docs/README.md)**: Documentation organization guide
 
 ## Requirements
 

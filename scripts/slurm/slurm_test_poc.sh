@@ -5,7 +5,7 @@
 #SBATCH -c 8
 #SBATCH --mem=80G
 #SBATCH -t 08:00:00
-#SBATCH -o logs/dream_test_poc_%j.out      # Standard output log
+#SBATCH -o experiments/P0_baseline/logs/test_poc_%j.out      # Standard output log
 
 # Load modules
 module load cuda/12.1
@@ -22,6 +22,6 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda
 
 # Run test
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
-python test_gpu_minimal.py
+python tests/unit/test_gpu_minimal.py
 
 echo "Test completed at $(date)"

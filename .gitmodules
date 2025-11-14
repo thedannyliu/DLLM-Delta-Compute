@@ -1,3 +1,6 @@
 [submodule "external/Dream"]
 	path = external/Dream
 	url = git@github.com:thedannyliu/Dream.git
+[submodule "external/learning-to-cache"]
+	path = external/learning-to-cache
+	url = https://github.com/horseee/learning-to-cache.git

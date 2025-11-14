@@ -29,6 +29,73 @@
 
 All experiments in this plan are assumed to run inside an activated **`dcllm`** env (local path is machine-specific).
 
+### Project Structure & Organization Rules
+
+```
+DLLM-Delta-Compute/
+├── src/                      # Core delta-compute infrastructure
+│   ├── tracing.py           # TraceCollector for P1 teacher traces
+│   └── __init__.py
+├── tests/                    # All test scripts (organized by type)
+│   ├── unit/                # Unit tests (GPU validation, infrastructure)
+│   ├── integration/         # Full workflow tests (model loading, generation)
+│   └── visualization/       # Trace plotting and analysis scripts
+├── scripts/                  # All executable scripts
+│   ├── slurm/              # SLURM batch job scripts (eval_*.sh)
+│   ├── setup/              # Environment setup scripts
+│   └── eval/               # Local evaluation scripts
+├── experiments/              # Experimental runs (organized by phase)
+│   ├── P0_baseline/        # Baseline teacher experiments
+│   ├── P1_traces/          # Trace collection runs
+│   ├── P2_early_stop/      # Early stopping experiments
+│   ├── P3_learned_gate/    # Learned gate experiments
+│   ├── P4_adaptive/        # Adaptive step scheduling
+│   ├── PhaseA_caching/     # Heuristic FFN caching
+│   ├── PhaseB_router/      # Learned router experiments
+│   └── PhaseC_continuous/  # Continuous-time router
+│   # Each phase directory contains:
+│   # ├── logs/        # SLURM outputs (*.out, gitignored)
+│   # ├── traces/      # Trace .pt files (gitignored)
+│   # ├── results/     # JSON metrics (tracked in git)
+│   # └── configs/     # Experiment configs (tracked in git)
+├── docs/                     # Documentation
+│   ├── master_plan.md       # THIS FILE: Primary specification
+│   ├── implementation_summary.md  # Implementation details
+│   ├── reports/            # Validation and evaluation reports
+│   └── archive/            # Historical documents (reference only)
+├── external/                 # External dependencies
+│   ├── Dream/              # Dream-7B (git submodule)
+│   └── learning-to-cache/  # L2C reference (git submodule)
+├── configs/                  # Model and experiment configurations
+├── reports/                  # Generated reports and visualizations
+├── .gitignore               # Git ignore patterns
+├── requirements.txt         # Python dependencies
+├── README.md                # Project overview
+└── TESTING_GUIDE.md         # Testing instructions
+```
+
+**Organization Rules:**
+
+1. **Source code** → `src/` (reusable infrastructure only)
+2. **Tests** → `tests/` (unit, integration, visualization)
+3. **Scripts** → `scripts/` (slurm, setup, eval subdirectories)
+4. **Experiment outputs** → `experiments/{phase}/` (organized by P0-P4, Phase A-C)
+5. **Documentation** → `docs/` (master_plan.md is primary, archive/ for old docs)
+6. **External repos** → Use git submodules (Dream, learning-to-cache)
+
+**Naming Conventions:**
+
+- SLURM scripts: `eval_{phase}_{task}.sh` (e.g., `eval_P0_baseline.sh`)
+- Test scripts: `test_{category}_{name}.py` (e.g., `test_gpu_minimal.py`)
+- Results: `{phase}_{task}_{date}_{config}_results.json`
+- Traces: `{phase}_{task}_{date}_{config}.pt`
+
+**Git Tracking:**
+
+- ✅ Track: Source code, tests, scripts, docs, result JSONs, configs
+- ❌ Ignore: Logs (*.out), traces (*.pt), pycache, large binaries
+- ⚙️ Submodules: Dream, learning-to-cache
+
 ---
 
 ## 1. Big Picture & Phases
@@ -526,11 +593,115 @@ Known risks from the previous drafts (summarized):
 
 - **Time conditioning mismatch**: cached FFN outputs ignore precise time embedding; acceptable for POC but not fundamentally correct.
 - **Memory / storage blowup**: storing too many intermediate activations for router training (Phase B/C) can become infeasible; for now, we avoid large-scale logging.
-- **No real speedup**: if masks do not skip matmuls, we might reduce “logical calls” but not wall-clock time; micro-benchmarks are needed to validate.
+- **No real speedup**: if masks do not skip matmuls, we might reduce "logical calls" but not wall-clock time; micro-benchmarks are needed to validate.
 
 ---
 
-## 10. Deliverables & Completion Criteria
+## 10. Current Implementation Status
+
+**Last Updated:** November 14, 2025  
+**Branch:** PoC-1  
+**Overall Progress:** ~80% infrastructure complete, ready for full GPU evaluation
+
+### ✅ Completed (Ready for Testing)
+
+**Infrastructure (P0-P2, Phase A):**
+- ✅ `src/tracing.py`: TraceCollector with LayerStepStats, save/load functionality
+- ✅ `external/Dream/modeling/modeling_dream.py`: Modified with delta-compute hooks
+  - DreamDecoderLayer: Added layer_idx, use_ffn_cache, trace_collector params
+  - DreamBaseModel: Added layer_ffn_caches, cache_schedule, trace_collector params
+  - DreamModel: Propagates all delta-compute params
+- ✅ `external/Dream/modeling/generation_utils.py`: Extended generation config and _sample loop
+  - DreamGenerationConfig: Added trace_teacher, delta_mode, cache_mode, thresholds
+  - _sample(): P2 early stopping logic, Phase A FFN caching, trace saving
+- ✅ `external/Dream/eval_instruct/lm_eval/models/diffllm.py`: model_args parsing
+- ✅ Test scripts: unit tests, integration tests, visualization tools
+- ✅ SLURM scripts: Phase-specific evaluation scripts (P0, P1, P2, Phase A)
+- ✅ Documentation: master_plan, implementation_summary, testing guide
+
+**GPU Validation:**
+- ✅ H100 80GB validation passed (Job 3547009)
+- ✅ CUDA 12.8, torch 2.9.0+cu128
+- ✅ All imports successful, TraceCollector works with GPU tensors
+
+### ⏳ In Progress
+
+**P0 – Baseline Evaluation:**
+- ⏳ Requires HuggingFace login (user completed)
+- ⏳ Full GSM8K baseline run pending (sbatch scripts/slurm/eval_P0_baseline.sh)
+- ⏳ Reference metrics collection (accuracy, latency, memory)
+
+### 🔜 Ready to Start (Infrastructure Complete)
+
+**P1 – Teacher Traces:**
+- 🔜 Run trace collection on GSM8K (sbatch scripts/slurm/eval_P1_traces.sh)
+- 🔜 Generate visualizations with tests/visualization/plot_traces.py
+- 🔜 Analyze stable vs unstable layers/steps
+- **Blockers:** None (infrastructure ready, needs P0 baseline first)
+
+**P2 – Early Stopping:**
+- 🔜 Evaluate on GSM8K with early stop (sbatch scripts/slurm/eval_P2_early_stop.sh)
+- 🔜 Measure skip ratios, latency reduction, accuracy impact
+- **Blockers:** None (infrastructure ready, needs P0 baseline for comparison)
+
+**Phase A – FFN Caching:**
+- 🔜 Evaluate on GSM8K with caching (sbatch scripts/slurm/eval_PhaseA_caching.sh)
+- 🔜 Ablation studies on different cache schedules
+- **Blockers:** None (infrastructure ready, needs P1 traces for optimal schedule)
+
+### 📋 Not Yet Implemented
+
+**P3 – Learned Gate:**
+- ❌ Gate architecture design (lightweight MLP)
+- ❌ Training data preparation from P1 traces
+- ❌ Gate training loop
+- ❌ Integration into generation_utils
+- **Blockers:** Needs P1 traces, P2 baseline results
+
+**P4 – Adaptive Steps:**
+- ❌ LTE estimation implementation
+- ❌ Risk-aware scheduling logic
+- ❌ Dynamic stride control
+- **Blockers:** Needs P2/P3 results, advanced feature
+
+**Phase B – Learned Router:**
+- ❌ Router architecture (time-conditioned MLP)
+- ❌ Training data generation
+- ❌ Distillation loss + efficiency regularizer
+- ❌ Integration into caching logic
+- **Blockers:** Needs Phase A results, P1 traces
+
+**Phase C – Continuous Router:**
+- ❌ Continuous-time parameterization
+- ❌ Schedule transfer learning
+- ❌ Multi-schedule training
+- **Blockers:** Needs Phase B results
+
+### Next Steps (Priority Order)
+
+1. **P0 Baseline** (immediate):
+   ```bash
+   huggingface-cli login  # ✅ Done
+   sbatch scripts/slurm/eval_P0_baseline.sh  # ⏳ Next
+   ```
+
+2. **P1 Traces** (after P0):
+   ```bash
+   sbatch scripts/slurm/eval_P1_traces.sh
+   python tests/visualization/plot_traces.py experiments/P1_traces/traces/*.pt
+   ```
+
+3. **P2 + Phase A** (parallel, after P1):
+   ```bash
+   sbatch scripts/slurm/eval_P2_early_stop.sh
+   sbatch scripts/slurm/eval_PhaseA_caching.sh
+   ```
+
+4. **P3, P4, Phase B, Phase C** (implement based on results from 1-3)
+
+---
+
+## 11. Deliverables & Completion Criteria
 
 **This project implements ALL phases P0-P4 and Phase A-C.** The deliverables below are structured incrementally for engineering clarity, but **all stages listed are required for project completion. There is no "future work" or "optional extensions" — everything here is in scope.**
 

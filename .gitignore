@@ -4,10 +4,12 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Log files
+# Log files and experimental outputs
 logs/
 *.log
 *.out
+experiments/*/logs/*.out
+experiments/*/traces/*.pt
 
 # Documentation build files
 docs/build/
@@ -27,6 +29,3 @@ venv/
 
 # Slurm output files
 slurm-*.out
-
-# Embedded repositories (if not using submodules)
-external/learning-to-cache/

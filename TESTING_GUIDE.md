@@ -5,19 +5,19 @@
 ### 1. Local CPU Test (Development)
 ```bash
 # Quick syntax check
-python test_poc_v1a.py --device cpu --model_path hkust-nlp/Dream-7B
+python tests/integration/test_poc_v1a.py --device cpu --model_path hkust-nlp/Dream-7B
 ```
 
 ### 2. GPU Quick Test (2 hours)
 ```bash
 # Submit SLURM job for quick validation
-sbatch slurm_test_poc.sh
+sbatch scripts/slurm/slurm_test_poc.sh
 
 # Monitor progress
 tail -f test_poc_*.out
 
 # Check results
-ls -lh test_traces/
+ls -lh experiments/P1_traces/traces/
 ```
 
 ### 3. Full GSM8K Evaluation (12 hours)
@@ -38,7 +38,7 @@ sbatch slurm_eval_gsm8k.sh hkust-nlp/Dream-7B early_stop
 ### 4. Visualize Traces
 ```bash
 # After tracing run completes, visualize results
-python plot_traces.py test_traces/trace_sample_*.pt --output_dir ./plots
+python tests/visualization/plot_traces.py experiments/P1_traces/traces/trace_sample_*.pt --output_dir ./plots
 
 # View generated plots
 ls plots/
@@ -83,7 +83,7 @@ MODEL_ARGS="pretrained=hkust-nlp/Dream-7B,delta_mode=p2_early_stop,cache_mode=no
 Generated: [model output]
 
 === Test 2: Teacher with Tracing ===
-✓ Trace saved to test_traces/trace_sample_123456.pt
+✓ Trace saved to experiments/P1_traces/traces/trace_sample_123456.pt
   Trace stats: 32 layers, 10 steps
 
 === Test 3: FFN Caching ===
@@ -115,7 +115,7 @@ export PYTHONPATH=/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/src:$P
 ### CUDA Out of Memory
 Reduce batch size or max_new_tokens:
 ```bash
-python test_poc_v1a.py --device cuda --batch_size 1
+python tests/integration/test_poc_v1a.py --device cuda --batch_size 1
 ```
 
 ### SLURM Job Not Starting
