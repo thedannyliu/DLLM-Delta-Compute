@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -Jdream_test           # Job name
-#SBATCH -p ice-gpu
-#SBATCH --gres=gpu:h100:1
+#SBATCH -p coc-gpu
+#SBATCH --gres=gpu:a100:1
 #SBATCH -c 8
 #SBATCH --mem=80G
 #SBATCH -t 08:00:00

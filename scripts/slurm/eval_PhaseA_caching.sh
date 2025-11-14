@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -Jdream_PhaseA          # Job name
-#SBATCH -N1 --gres=gpu:H100:1   # 1 node, 1 H100 GPU
+#SBATCH -N1 --gres=gpu:a100:1   # 1 node, 1 H100 GPU
 #SBATCH --mem-per-gpu=80G       # Memory per GPU
 #SBATCH -t0-12:00:00            # 12 hours time limit
 #SBATCH -o experiments/PhaseA_caching/logs/gsm8k_caching_%j.out
-#SBATCH -qinfinity              # Queue name
-#SBATCH -A GT-hl94              # Account
+#SBATCH -p coc-gpu              # Queue name
+#SBATCH -A coc              # Account
 
 # Load modules
 module load cuda/12.1
@@ -14,6 +14,15 @@ module load anaconda3/2023.03
 # Activate conda environment
 source /usr/local/pace-apps/manual/packages/anaconda3/2023.03/etc/profile.d/conda.sh
 conda activate dcllm
+
+# Verify environment
+echo "Python: $(which python)"
+echo "Conda env: $CONDA_DEFAULT_ENV"
+
+cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
+
+# Install missing dependencies if needed
+pip install -q sacrebleu evaluate scikit-learn sqlitedict word2number 2>&1 | grep -v "Requirement already satisfied" || true
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 
