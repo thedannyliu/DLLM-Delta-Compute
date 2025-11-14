@@ -22,9 +22,6 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.cuda
 
 # Run test
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
-python test_poc_v1a.py \
-    --model_path hkust-nlp/Dream-7B \
-    --output_dir ./test_traces \
-    --device cuda
+python test_gpu_minimal.py
 
 echo "Test completed at $(date)"

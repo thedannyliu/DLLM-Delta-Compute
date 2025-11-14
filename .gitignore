@@ -1,1 +1,32 @@
-# docs/material
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Log files
+logs/
+*.log
+*.out
+
+# Documentation build files
+docs/build/
+
+# Large binary files in material
+docs/material/
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# IDE / Editor specific
+.vscode/
+.idea/
+
+# Slurm output files
+slurm-*.out
+
+# Embedded repositories (if not using submodules)
+external/learning-to-cache/
