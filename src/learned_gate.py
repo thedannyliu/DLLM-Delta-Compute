@@ -218,7 +218,7 @@ class GateTrainer:
             features: [N, input_dim] tensor
             labels: [N, 1] tensor
         """
-        from .tracing import TraceCollector
+        from tracing import TraceCollector
         
         all_features = []
         all_labels = []

@@ -23,6 +23,8 @@ class LayerStepStats:
     ffn_cosine_sim: Optional[float] = None  # vs previous step
     attention_cosine_sim: Optional[float] = None
     forward_time_ms: Optional[float] = None
+    # Optional: Full activations (only for small subset of samples)
+    ffn_output: Optional[torch.Tensor] = None
 
 
 class TraceCollector:
@@ -49,12 +51,14 @@ class TraceCollector:
         enabled: bool = False,
         num_layers: int = 32,
         track_attention: bool = False,
-        track_timing: bool = True
+        track_timing: bool = True,
+        save_activations: bool = False  # New flag
     ):
         self.enabled = enabled
         self.num_layers = num_layers
         self.track_attention = track_attention
         self.track_timing = track_timing
+        self.save_activations = save_activations
         
         # Storage: {layer_idx: {step_idx: LayerStepStats}}
         self.stats: Dict[int, Dict[int, LayerStepStats]] = {
@@ -69,7 +73,7 @@ class TraceCollector:
         self.current_step: Optional[int] = None
         self.step_start_time: Optional[float] = None
         self.layer_start_times: Dict[int, float] = {}
-        
+    
     def start_step(self, step_idx: int):
         """Mark the start of a diffusion step."""
         if not self.enabled:
@@ -156,11 +160,12 @@ class TraceCollector:
             attention_output_norm=attn_norm,
             ffn_cosine_sim=ffn_cos_sim,
             attention_cosine_sim=attn_cos_sim,
-            forward_time_ms=forward_time
+            forward_time_ms=forward_time,
+            ffn_output=ffn_output.detach().cpu() if self.save_activations else None
         )
         
         self.stats[layer_idx][step_idx] = stats
-    
+
     def get_stats(self, layer_idx: int, step_idx: int) -> Optional[LayerStepStats]:
         """Retrieve statistics for a specific layer and step."""
         return self.stats.get(layer_idx, {}).get(step_idx)
