@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -Jdream_PhaseA          # Job name
-#SBATCH -N1 --gres=gpu:h100:1   # 1 node, 1 H100 GPU
+#SBATCH -N1 --gres=gpu:L40S:1   # 1 node, 1 L40S GPU
 #SBATCH --mem-per-gpu=40G       # Memory per GPU
-#SBATCH -t0-12:00:00            # 12 hours time limit
+#SBATCH -t0-00:30:00            # 30 mins time limit
 #SBATCH -o experiments/PhaseA_caching/logs/gsm8k_caching_%j.out
 #SBATCH -p ice-gpu              # Queue name
 #SBATCH --account=coc
@@ -48,7 +48,7 @@ python -m lm_eval \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
-    --limit 100 \
+    --limit 5 \
     --seed 42 \
     --output_path ../../../../$OUTPUT_DIR/results.json \
     --log_samples \

@@ -3,8 +3,8 @@
 #SBATCH --account=coc
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --time=4:00:00
+#SBATCH --gres=gpu:L40S:1
+#SBATCH --time=0:30:00
 #SBATCH --mem=32G
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
@@ -17,4 +17,4 @@ echo "Training Phase C Continuous Router..."
 python scripts/training/train_continuous_router.py \
     --trace_dir experiments/P1_traces/traces \
     --output_dir experiments/PhaseC_continuous/checkpoints \
-    --num_epochs 50
+    --num_epochs 5

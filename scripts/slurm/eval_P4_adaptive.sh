@@ -4,12 +4,12 @@
 #SBATCH --error=experiments/P4_adaptive/logs/gsm8k_adaptive_%j.err
 #SBATCH --account=coc
 #SBATCH --partition=ice-gpu
-#SBATCH --gres=gpu:H100:1
+#SBATCH --gres=gpu:L40S:1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=40G
-#SBATCH --time=6:00:00
+#SBATCH --time=0:30:00
 
 # P4 - Adaptive Step Scheduling Evaluation on GSM8K
 
@@ -46,7 +46,7 @@ MODEL="Dream-org/Dream-v0-Instruct-7B"
 DIFFUSION_STEPS=256
 MAX_NEW_TOKENS=256
 BATCH_SIZE=1
-NUM_SAMPLES=100
+NUM_SAMPLES=5
 SEED=42
 
 # Adaptive scheduler parameters

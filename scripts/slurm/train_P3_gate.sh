@@ -3,8 +3,8 @@
 #SBATCH --account=coc
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --time=4:00:00
+#SBATCH --gres=gpu:L40S:1
+#SBATCH --time=0:30:00
 #SBATCH --mem=32G
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
@@ -24,4 +24,4 @@ python scripts/training/train_learned_gate.py \
     --trace_dir experiments/P1_traces/traces \
     --oracle_labels experiments/P3_learned_gate/oracle_labels.json \
     --output_dir experiments/P3_learned_gate/checkpoints \
-    --num_epochs 50
+    --num_epochs 5
