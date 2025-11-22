@@ -5,7 +5,7 @@
 #SBATCH -t0-12:00:00            # 12 hours time limit
 #SBATCH -o experiments/PhaseA_caching/logs/gsm8k_caching_%j.out
 #SBATCH -p ice-gpu              # Queue name
-              # Account
+#SBATCH --account=coc
 
 # Load modules
 module load cuda/12.1

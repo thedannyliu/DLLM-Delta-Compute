@@ -2,6 +2,7 @@
 #SBATCH --job-name=eval_P4_adaptive
 #SBATCH --output=experiments/P4_adaptive/logs/gsm8k_adaptive_%j.out
 #SBATCH --error=experiments/P4_adaptive/logs/gsm8k_adaptive_%j.err
+#SBATCH --account=coc
 #SBATCH --partition=ice-gpu
 #SBATCH --gres=gpu:H100:1
 #SBATCH --nodes=1
