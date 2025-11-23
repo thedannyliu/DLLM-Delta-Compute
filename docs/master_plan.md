@@ -444,6 +444,7 @@ Phase C’s success is measured by:
 - 訓練目標同樣採 **cosine-based proxy**（`1 - ffn_cosine_sim`），且目前僅在單一 schedule（256 steps）訓練 `continuous_router_final.pt`。
 - Eval 整合已可載入 router 並運行 `cache_mode="l2c_continuous"`（job 3628597 smoke test驗證）。
 - 待辦：多 schedule 訓練與 transfer、加入 distillation/效率正則、生成 β(p) 熱圖與跨 schedule 表現分析。
+- 工程狀態：router 已支援 progress `p` 為時間軸，以及可選的 schedule embedding；訓練腳本可接受多個 trace 目錄與對應的 schedule id（單一 schedule 時仍預設禁用 schedule embedding）。
 
 ---
 
