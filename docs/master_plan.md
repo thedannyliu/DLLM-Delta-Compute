@@ -87,7 +87,7 @@ We implement **two families of acceleration**, all on top of the same Dream‑7B
   - **P0 – Baseline teacher.** No acceleration; reference for quality & latency.
   - **P1 – Teacher traces.** Collect per‑step, per‑layer statistics.
   - **P2 – Rule‑based gate.** Sequence‑level early stopping based on confidence / entropy.
-  - **P3 – Learned gate.** Token‑level learned stopping rule using P1 features.
+  - **P3 – Learned gate.** Learned stopping rule using P1 features (sequence‑level in v1; token‑level extensions optional).
   - **P4 – Adaptive steps.** Dynamic diffusion stride based on local truncation error and risk signals.
 
 - **L2C Layer‑Caching Track (Phase A–C)**  
@@ -214,7 +214,7 @@ P0 is the **non‑negotiable reference**: all later phases must be compared agai
 
 P2 is the **simplest gating baseline**; P3 and P4 should strictly improve upon it in terms of flexibility and/or speedup.
 
-### 4.4 P3 – Learned Gate (Token‑Level)
+### 4.4 P3 – Learned Gate
 
 **Goal.** Replace P2’s hard‑coded thresholds with a **small learned MLP gate** that predicts when it is safe to stop, using richer features.
 
