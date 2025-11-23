@@ -23,6 +23,9 @@ class ContinuousRouterConfig:
     num_hidden_layers: int = 2
     dropout: float = 0.1
     time_encoding: str = 'sinusoidal'  # 'sinusoidal' or 'learned'
+    # Optional schedule embedding (enable when mixing multiple schedules)
+    schedule_vocab_size: int = 0  # 0 = disable
+    schedule_emb_dim: int = 32
 
 
 class TimeEncoder(nn.Module):
@@ -150,9 +153,20 @@ class ContinuousRouter(nn.Module):
             num_embeddings=config.num_layers,
             embedding_dim=config.time_embedding_dim
         )
+
+        # Optional schedule embedding
+        if config.schedule_vocab_size > 0:
+            self.schedule_embedding = nn.Embedding(
+                num_embeddings=config.schedule_vocab_size,
+                embedding_dim=config.schedule_emb_dim
+            )
+        else:
+            self.schedule_embedding = None
         
-        # MLP: [time_emb || layer_emb] -> β
+        # MLP: [time_emb || layer_emb || optional schedule_emb] -> β
         mlp_input_dim = config.time_embedding_dim * 2
+        if self.schedule_embedding is not None:
+            mlp_input_dim += config.schedule_emb_dim
         layers = []
         prev_dim = mlp_input_dim
         
@@ -177,7 +191,8 @@ class ContinuousRouter(nn.Module):
     def forward(
         self,
         t: torch.Tensor,
-        layer_idx: torch.Tensor = None
+        layer_idx: torch.Tensor = None,
+        schedule_ids: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Compute recompute probability.
@@ -186,6 +201,7 @@ class ContinuousRouter(nn.Module):
             t: Time values in [0,1]. Shape: [] or [batch_size]
             layer_idx: Layer indices. Shape: [] or [batch_size] or [num_layers]
                        If None, compute for all layers
+            schedule_ids: Optional schedule ids broadcastable to layer_idx shape
         
         Returns:
             β probabilities. Shape depends on inputs:
@@ -217,8 +233,17 @@ class ContinuousRouter(nn.Module):
             time_emb = time_emb.unsqueeze(1).expand(-1, layer_emb.shape[0], -1)  # [B, L, D]
             layer_emb = layer_emb.unsqueeze(0).expand(time_emb.shape[0], -1, -1)  # [B, L, D]
         
-        # Concatenate
-        combined = torch.cat([time_emb, layer_emb], dim=-1)
+        # Schedule embedding broadcast to match time_emb shape if provided
+        if self.schedule_embedding is not None and schedule_ids is not None:
+            sched = self.schedule_embedding(schedule_ids)
+            # Expand schedule embedding to match time_emb dims
+            while sched.dim() < time_emb.dim():
+                sched = sched.unsqueeze(0)
+            expand_shape = list(time_emb.shape[:-1]) + [sched.shape[-1]]
+            sched = sched.expand(expand_shape)
+            combined = torch.cat([time_emb, layer_emb, sched], dim=-1)
+        else:
+            combined = torch.cat([time_emb, layer_emb], dim=-1)
         
         # MLP
         beta = self.mlp(combined).squeeze(-1)
@@ -250,7 +275,8 @@ class ContinuousRouter(nn.Module):
         self,
         num_steps: int,
         threshold: float = 0.5,
-        device: str = 'cuda'
+        device: str = 'cuda',
+        schedule_id: Optional[int] = None
     ) -> Dict[int, Dict[int, bool]]:
         """
         Get decisions for an entire diffusion schedule.
@@ -259,12 +285,17 @@ class ContinuousRouter(nn.Module):
             num_steps: Number of diffusion steps
             threshold: Decision threshold
             device: torch device
+            schedule_id: Optional schedule id for schedule embedding
         
         Returns:
             {step_idx: {layer_idx: bool}} nested dict of decisions
         """
         self.eval()
         schedule = {}
+        sched_tensor = None
+        if self.schedule_embedding is not None and schedule_id is not None:
+            # shape aligned with layer indices later
+            sched_tensor = torch.tensor(schedule_id, dtype=torch.long, device=device)
         
         with torch.no_grad():
             for step_idx in range(num_steps):
@@ -273,7 +304,11 @@ class ContinuousRouter(nn.Module):
                 
                 # Get all layers at once
                 layer_indices = torch.arange(self.config.num_layers, device=device)
-                probs = self.forward(t_tensor, layer_indices)  # [num_layers]
+                if sched_tensor is not None:
+                    sched_ids = sched_tensor.expand(layer_indices.shape[0])
+                else:
+                    sched_ids = None
+                probs = self.forward(t_tensor, layer_indices, schedule_ids=sched_ids)  # [num_layers]
                 
                 schedule[step_idx] = {
                     layer_idx: probs[layer_idx].item() >= threshold
@@ -345,7 +380,9 @@ class ContinuousRouter(nn.Module):
                 'hidden_dim': self.config.hidden_dim,
                 'num_hidden_layers': self.config.num_hidden_layers,
                 'dropout': self.config.dropout,
-                'time_encoding': self.config.time_encoding
+                'time_encoding': self.config.time_encoding,
+                'schedule_vocab_size': self.config.schedule_vocab_size,
+                'schedule_emb_dim': self.config.schedule_emb_dim
             },
             'num_params': self.num_params
         }
@@ -368,7 +405,9 @@ class ContinuousRouter(nn.Module):
             hidden_dim=config_dict.get('hidden_dim', 128),
             num_hidden_layers=config_dict.get('num_hidden_layers', 2),
             dropout=config_dict.get('dropout', 0.1),
-            time_encoding=config_dict.get('time_encoding', 'sinusoidal')
+            time_encoding=config_dict.get('time_encoding', 'sinusoidal'),
+            schedule_vocab_size=config_dict.get('schedule_vocab_size', 0),
+            schedule_emb_dim=config_dict.get('schedule_emb_dim', 32)
         )
         
         router = ContinuousRouter(config)
