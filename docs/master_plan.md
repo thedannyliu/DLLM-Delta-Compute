@@ -234,6 +234,11 @@ P2 is the **simplest gating baseline**; P3 and P4 should strictly improve upon i
 
 P3 should **match or beat P2** on GSM8K while giving more nuanced control over where and when we stop.
 
+**Current implementation status (v1).**
+- Label生成目前採用 **trace-based heuristic**：`scripts/training/generate_oracle_labels.py` 以 P1 的 FFN cosine 相似度為 proxy（cosine ≥ 阈值視為安全），尚未實作完整的 teacher/student ablation oracle。
+- 決策是 **序列層級 early-stop**（使用最後一層的 trace + 當前 logits 的 confidence/entropy），尚未細化到 token-level freeze。
+- 評估整合：`delta_mode="p3_learned_gate"` 已接上 Dream 生成迴圈並可載入 checkpoint（在 job 3628597 的 smoke test 中驗證可成功載入 gate）。
+
 ### 4.5 P4 – Adaptive Step Scheduling
 
 **Goal.** Dynamically choose **how large a stride** to take along the diffusion schedule, based on local error estimates and risk signals, instead of using a fixed step size.
@@ -254,6 +259,11 @@ P3 should **match or beat P2** on GSM8K while giving more nuanced control over w
   - Phase A caching schedule.
 
 P4 is orthogonal to L2C: it changes **how many diffusion steps we visit**, while Phase A–C change **how much work each visited step performs**.
+
+**Current implementation status (v1).**
+- LTE 以 logits 差異作為近似，entropy/kl 採 logits 上的平均值；stride 控制遵循上述安全邏輯。
+- 已整合到 `delta_mode="p4_adaptive"`；修正了 entropy 索引的安全性（避免 mask 尺寸不符時的崩潰）。
+- 仍需進一步以小規模評估微調閾值、觀察實際 stride 與速度/品質效果。
 
 ---
 
@@ -362,6 +372,11 @@ Phase B should improve upon Phase A by:
 - Learning non‑trivial patterns: e.g., “always recompute early, cache mid‑layers later”.
 - Achieving better **accuracy vs compute** Pareto front on the same fixed schedule.
 
+**Current implementation status (v1).**
+- 訓練目標採用 **cosine-based proxy**（`target ≈ 1 - ffn_cosine_sim`），尚未切換為完整的 teacher/student distillation 損失。
+- 目前僅在單一固定 schedule（256 steps）上訓練並產出 `router_final.pt`；評估流程已接上 `cache_mode="l2c_learned"` 並能載入 router（job 3628597 smoke test驗證）。
+- 待辦：加入 distillation 損失、分析 β heatmap、彙整 cache ratio vs EM 的 Pareto。
+
 ### 5.5 Phase C – Continuous Router (Progress‑Conditioned, Schedule‑Transferable)
 
 **Goal.** Generalize Phase B to a **continuous function of progress**, so the router can transfer across different diffusion schedules and still make sensible decisions.
@@ -400,6 +415,11 @@ Phase C’s success is measured by:
 - Matching Phase B performance on the schedule it trained on.
 - Maintaining good accuracy and speedup when the number of diffusion steps changes.
 - Producing smooth β_ℓ(p) curves and interpretable heatmaps (see `visualize_schedule`).
+
+**Current implementation status (v1).**
+- 訓練目標同樣採 **cosine-based proxy**（`1 - ffn_cosine_sim`），且目前僅在單一 schedule（256 steps）訓練 `continuous_router_final.pt`。
+- Eval 整合已可載入 router 並運行 `cache_mode="l2c_continuous"`（job 3628597 smoke test驗證）。
+- 待辦：多 schedule 訓練與 transfer、加入 distillation/效率正則、生成 β(p) 熱圖與跨 schedule 表現分析。
 
 ---
 

@@ -85,7 +85,8 @@ class AdaptiveScheduler:
         x: torch.Tensor,
         mask_logits: torch.Tensor,
         step_idx: int,
-        total_steps: int
+        total_steps: int,
+        prev_logits: Optional[torch.Tensor] = None,
     ) -> float:
         """
         Estimate local truncation error by comparing Euler and Heun steps.
@@ -105,14 +106,12 @@ class AdaptiveScheduler:
             # Estimate Heun: would need one more model forward
             # For efficiency, use a simplified approximation:
             # Compare confidence change rate
-            if self.prev_logits is not None and self.prev_logits.shape == mask_logits.shape:
+            if prev_logits is not None and prev_logits.shape == mask_logits.shape:
                 # Approximate LTE as change in logits
-                logit_change = torch.norm(mask_logits - self.prev_logits, p=2)
+                logit_change = torch.norm(mask_logits - prev_logits, p=2)
                 lte = logit_change.item() / (mask_logits.numel() ** 0.5)  # Normalized
             else:
                 lte = 0.0  # First step, no history
-            
-            self.prev_logits = mask_logits.clone()
         
         return lte
     
@@ -127,8 +126,8 @@ class AdaptiveScheduler:
             log_probs = torch.log(probs + epsilon)
             entropy = -torch.sum(probs * log_probs, dim=-1)
             
-            if mask is not None:
-                # Only compute on masked positions
+            # If mask is provided but shapes do not align, ignore the mask to avoid indexing errors.
+            if mask is not None and mask.shape == entropy.shape:
                 entropy = entropy[mask]
             
             return entropy.mean().item()
@@ -136,14 +135,14 @@ class AdaptiveScheduler:
     def compute_kl_divergence(
         self,
         current_logits: torch.Tensor,
-        prev_logits: torch.Tensor,
+        prev_logits: Optional[torch.Tensor],
         mask: torch.Tensor = None
     ) -> float:
         """
         Compute KL divergence between current and previous step predictions.
         Large KL = distribution changed significantly = should use smaller stride.
         """
-        if prev_logits is None:
+        if prev_logits is None or prev_logits.shape != current_logits.shape:
             return 0.0
         
         with torch.no_grad():
@@ -156,7 +155,7 @@ class AdaptiveScheduler:
                 dim=-1
             )
             
-            if mask is not None:
+            if mask is not None and mask.shape == kl.shape:
                 kl = kl[mask]
             
             return kl.mean().item()
@@ -238,12 +237,17 @@ class AdaptiveScheduler:
             next_step: The index of the next diffusion step to execute
             info: Dictionary with diagnostic information
         """
+        # Keep a copy of previous logits before they get updated
+        prev_logits = self.prev_logits
+
         # Compute signals
-        mask = (x == mask_token_id)
-        
-        lte = self.estimate_lte_euler_heun(model, x, mask_logits, state.current_step, state.total_steps)
-        entropy = self.compute_entropy(mask_logits, mask)
-        kl = self.compute_kl_divergence(mask_logits, self.prev_logits, mask)
+        # Note: mask_logits already corresponds to masked positions, so we do not
+        # further index with the full-sequence mask to avoid shape mismatches.
+        lte = self.estimate_lte_euler_heun(
+            model, x, mask_logits, state.current_step, state.total_steps, prev_logits
+        )
+        entropy = self.compute_entropy(mask_logits, mask=None)
+        kl = self.compute_kl_divergence(mask_logits, prev_logits, mask=None)
         
         # Decide stride
         new_stride = self.decide_stride(state, lte, entropy, kl)
@@ -258,6 +262,9 @@ class AdaptiveScheduler:
         
         state.total_steps_taken += 1
         state.total_steps_skipped += steps_skipped
+
+        # Update history for next call
+        self.prev_logits = mask_logits.detach().clone()
         
         # Diagnostic info
         info = {
