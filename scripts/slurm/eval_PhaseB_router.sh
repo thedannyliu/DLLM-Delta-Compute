@@ -23,8 +23,15 @@ echo "Running on node: $(hostname)"
 echo ""
 
 # Activate environment
-source /home/hice1/eliu354/.bashrc
+module load cuda/12.1
+module load anaconda3/2023.03
+source /usr/local/pace-apps/manual/packages/anaconda3/2023.03/etc/profile.d/conda.sh
 conda activate dcllm
+
+# Check environment
+echo "Python: $(which python)"
+echo "Conda env: $CONDA_DEFAULT_ENV"
+echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
 
 # Project directory
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute

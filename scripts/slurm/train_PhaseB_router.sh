@@ -9,9 +9,20 @@
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 
-cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
-source ~/.bashrc
+# Load modules
+module load cuda/12.1
+module load anaconda3/2023.03
+
+# Activate conda environment
+source /usr/local/pace-apps/manual/packages/anaconda3/2023.03/etc/profile.d/conda.sh
 conda activate dcllm
+
+# Verify environment
+echo "Python: $(which python)"
+echo "Conda env: $CONDA_DEFAULT_ENV"
+echo "CUDA available: $(python -c 'import torch; print(torch.cuda.is_available())')"
+
+cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute
 
 echo "Training Phase B Router..."
 python scripts/training/train_learned_router.py \

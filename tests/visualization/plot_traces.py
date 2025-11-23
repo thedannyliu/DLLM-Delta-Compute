@@ -219,40 +219,49 @@ def print_summary_stats(trace_data):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('trace_file', type=str, 
-                       help='Path to saved trace .pt file')
+    parser.add_argument('trace_files', type=str, nargs='+',
+                       help='Path to saved trace .pt file(s)')
     parser.add_argument('--output_dir', type=str, default=None,
                        help='Directory to save plots (default: same as trace file)')
     args = parser.parse_args()
     
-    # Load trace
-    trace_path = Path(args.trace_file)
-    if not trace_path.exists():
-        raise FileNotFoundError(f"Trace file not found: {trace_path}")
-    
-    print(f"Loading trace from: {trace_path}")
-    trace_data = torch.load(trace_path)
-    
-    # Determine output directory
-    if args.output_dir:
-        output_path = Path(args.output_dir)
-    else:
-        output_path = trace_path.parent / 'plots'
-    
-    output_path.mkdir(parents=True, exist_ok=True)
-    print(f"Saving plots to: {output_path}")
-    
-    # Print summary
-    print_summary_stats(trace_data)
-    
-    # Generate plots
-    plot_ffn_norm_heatmap(trace_data, output_path)
-    plot_cosine_sim_heatmap(trace_data, output_path)
-    plot_runtime_per_layer(trace_data, output_path)
-    plot_stability_analysis(trace_data, output_path)
-    plot_step_progression(trace_data, output_path)
-    
-    print(f"\n✓ All plots generated successfully!")
+    for trace_file in args.trace_files:
+        # Load trace
+        trace_path = Path(trace_file)
+        if not trace_path.exists():
+            print(f"Warning: Trace file not found: {trace_path}")
+            continue
+        
+        print(f"\nProcessing trace: {trace_path}")
+        try:
+            trace_data = torch.load(trace_path)
+        except Exception as e:
+            print(f"Error loading {trace_path}: {e}")
+            continue
+        
+        # Determine output directory
+        if args.output_dir:
+            output_path = Path(args.output_dir) / trace_path.stem
+        else:
+            output_path = trace_path.parent / 'plots' / trace_path.stem
+        
+        output_path.mkdir(parents=True, exist_ok=True)
+        print(f"Saving plots to: {output_path}")
+        
+        # Print summary
+        try:
+            print_summary_stats(trace_data)
+            
+            # Generate plots
+            plot_ffn_norm_heatmap(trace_data, output_path)
+            plot_cosine_sim_heatmap(trace_data, output_path)
+            plot_runtime_per_layer(trace_data, output_path)
+            plot_stability_analysis(trace_data, output_path)
+            plot_step_progression(trace_data, output_path)
+            
+            print(f"✓ Plots generated for {trace_path.name}")
+        except Exception as e:
+            print(f"Error processing {trace_path.name}: {e}")
 
 if __name__ == '__main__':
     main()

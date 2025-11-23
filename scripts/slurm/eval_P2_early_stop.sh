@@ -39,8 +39,8 @@ echo "Started at: $(date)"
 # Run with early stopping enabled
 # Small-scale test: 100 samples, fixed seed for reproducibility
 cd external/Dream/eval_instruct
-\n# Create output directory before tee
-mkdir -p "../../../../$OUTPUT_DIR"
+# Create output directory before tee
+mkdir -p "../../../$OUTPUT_DIR"
 
 python -m lm_eval \
     --model diffllm \
@@ -50,9 +50,9 @@ python -m lm_eval \
     --batch_size 1 \
     --limit 100 \
     --seed 42 \
-    --output_path ../../../../$OUTPUT_DIR/results.json \
+    --output_path ../../../$OUTPUT_DIR/results.json \
     --log_samples \
-    2>&1 | tee ../../../../$OUTPUT_DIR/eval.log
+    2>&1 | tee ../../../$OUTPUT_DIR/eval.log
 
 echo "Evaluation completed at $(date)"
 echo "Results saved to: $OUTPUT_DIR"

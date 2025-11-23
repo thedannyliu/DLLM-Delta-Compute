@@ -38,7 +38,7 @@ echo "Started at: $(date)"
 cd external/Dream/eval_instruct
 
 # Create output directory before tee
-mkdir -p "../../../../$OUTPUT_DIR"
+mkdir -p "../../../$OUTPUT_DIR"
 
 python -m lm_eval --model diffllm \
   --model_args pretrained=$MODEL_PATH,delta_mode=none,cache_mode=none,trace_teacher=False \
@@ -47,9 +47,9 @@ python -m lm_eval --model diffllm \
     --batch_size 1 \
     --limit 100 \
     --seed 42 \
-    --output_path ../../../../$OUTPUT_DIR/results.json \
+    --output_path ../../../$OUTPUT_DIR/results.json \
     --log_samples \
-    2>&1 | tee ../../../../$OUTPUT_DIR/eval.log
+    2>&1 | tee ../../../$OUTPUT_DIR/eval.log
 
 echo "Evaluation completed at $(date)"
 echo "Results saved to: $OUTPUT_DIR"
