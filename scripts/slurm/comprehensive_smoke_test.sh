@@ -96,7 +96,7 @@ fi
 # ============================================
 test_name="P1_Traces"
 NAMES+=("$test_name")
-TRACE_OUTPUT="experiments/P1_traces/traces_smoke_$TIMESTAMP"
+TRACE_OUTPUT="$(pwd)/experiments/P1_traces/traces_smoke_$TIMESTAMP"
 mkdir -p "$TRACE_OUTPUT"
 if run_test "$test_name" \
     "pretrained=$MODEL_PATH,delta_mode=none,cache_mode=none,trace_teacher=True,trace_output_dir=$TRACE_OUTPUT"; then
