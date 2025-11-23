@@ -42,7 +42,8 @@ mkdir -p experiments/PhaseB_router/results
 
 # Configuration
 MODEL="Dream-org/Dream-v0-Instruct-7B"
-ROUTER_CHECKPOINT="experiments/PhaseB_router/checkpoints/learned_router_best.pt"
+# Use absolute path to avoid relative path issues when changing directories
+ROUTER_CHECKPOINT="$(pwd)/experiments/PhaseB_router/checkpoints/router_final.pt"
 DIFFUSION_STEPS=256
 MAX_NEW_TOKENS=256
 BATCH_SIZE=1

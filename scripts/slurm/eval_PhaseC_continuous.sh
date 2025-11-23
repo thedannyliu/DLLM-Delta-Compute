@@ -42,7 +42,8 @@ mkdir -p experiments/PhaseC_continuous/results
 
 # Configuration
 MODEL="Dream-org/Dream-v0-Instruct-7B"
-ROUTER_CHECKPOINT="experiments/PhaseC_continuous/checkpoints/continuous_router_best.pt"
+# Use absolute path to avoid relative path issues when changing directories
+ROUTER_CHECKPOINT="$(pwd)/experiments/PhaseC_continuous/checkpoints/continuous_router_final.pt"
 DIFFUSION_STEPS=256  # Can test different schedules (128, 256, 512) for transfer
 MAX_NEW_TOKENS=256
 BATCH_SIZE=1

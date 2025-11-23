@@ -45,7 +45,8 @@ mkdir -p experiments/P3_learned_gate/results
 
 # Configuration
 MODEL="Dream-org/Dream-v0-Instruct-7B"
-GATE_CHECKPOINT="experiments/P3_learned_gate/checkpoints/learned_gate_best.pt"
+# Use absolute path to avoid relative path issues when changing directories
+GATE_CHECKPOINT="$(pwd)/experiments/P3_learned_gate/checkpoints/learned_gate_final.pt"
 DIFFUSION_STEPS=256
 MAX_NEW_TOKENS=256
 BATCH_SIZE=1
