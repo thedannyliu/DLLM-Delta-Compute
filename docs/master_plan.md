@@ -403,6 +403,30 @@ Phase B should improve upon Phase A by:
     - Record teacher outputs plus the corresponding progress value `p` at that step.
     - Train `ContinuousRouter` to minimize distillation loss + efficiency regularizer, similar to Phase B.
   - `ContinuousRouterTrainer` supports training on multiple schedules and testing transfer via `test_schedule_transfer(...)`.
+- **Practical router input design (progress‑based).**
+  - Always use **sequence‑level progress** as the primary time signal: `p = 1 - M/N`, where `M` is the number of masked tokens and `N` is the max sequence length. This keeps `p ∈ [0, 1]` and monotonic across any schedule or P4 stride.
+  - Treat **block‑level decoded ratio** or other local statistics (per‑layer mask ratio, FFN cosine stability, entropy, etc.) as **optional local features**, not as the main time axis.
+  - A practical input to `ContinuousRouter` is:
+    ```python
+    router_input = concat(
+        TimeEncoder(p),             # global progress
+        layer_embedding[layer_idx], # layer id
+        optional_local_stats,       # e.g., local mask ratio, trace features
+        optional_schedule_emb * γ   # small‑weight schedule embedding if needed
+    )
+    ```
+    where `γ` is small so that routing remains primarily driven by `p` instead of overfitting to a particular step grid.
+- **Practical training loop (single‑ and multi‑schedule).**
+  - **Single‑schedule v1:** train `ContinuousRouter` on a single schedule (e.g., 256 steps) using `p` computed from P1 traces; at evaluation time, reuse the same router on 128/256/512 schedules by recomputing `p` from `x` and `mask_token_id` at each visited step.
+  - **Multi‑schedule v2:** build a dataset mixing schedules `{128, 256, 512}`:
+    - For each training example, store `(schedule_id, layer_idx, p, teacher target, optional local stats)`.
+    - Use a distillation loss such as `||h_student(p; β) - h_teacher||^2` or KL, plus an efficiency regularizer on recompute ratio.
+    - Sample batches so that all schedules are reasonably represented; optionally include a weak `schedule_embedding[schedule_id] * γ` in router inputs for fine‑grained adjustments.
+- **Interaction with P4.**
+  - At runtime, even under `delta_mode="p4_adaptive"`:
+    - For every **actually executed** diffusion update, recompute `p = 1 - M/N` from the current `x` and `mask_token_id`.
+    - Call the continuous router with this `p` (and layer indices / local stats) to obtain per‑layer recompute/cache decisions.
+    - Independently, let P4’s `AdaptiveScheduler` use LTE/entropy/KL to choose the next stride. The router never needs to see raw step indices, only the current progress `p`.
 - **Integration:**
   - Mode: `cache_mode="l2c_continuous"` (name for clarity; exact string configurable).
   - At runtime:
