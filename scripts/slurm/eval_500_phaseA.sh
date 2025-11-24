@@ -29,18 +29,21 @@ echo ""
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/external/Dream/eval_instruct
 
+RUN_ID=$(date +%Y%m%d_%H%M%S)
+TIMING_LOG="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/reports/timing/PhaseA_500_${RUN_ID}.json"
+
 # Define cache schedule - comma-separated layer indices to cache
 # For 32 layers, cache every other layer: 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31
 CACHE_SCHEDULE="1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31"
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_ffn,cache_schedule=${CACHE_SCHEDULE} \
+    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_ffn,cache_schedule=${CACHE_SCHEDULE},timing_log_path=${TIMING_LOG} \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
     --limit 500 \
-    --output_path results/PhaseA_500_$(date +%Y%m%d_%H%M%S)
+    --output_path results/PhaseA_500_${RUN_ID}
 
 echo ""
 echo "Completed: $(date)"

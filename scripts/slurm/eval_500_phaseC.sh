@@ -30,6 +30,9 @@ echo ""
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/external/Dream/eval_instruct
 
+RUN_ID=$(date +%Y%m%d_%H%M%S)
+TIMING_LOG="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/reports/timing/PhaseC_500_${RUN_ID}.json"
+
 # Check for continuous router checkpoint
 ROUTER_CKPT="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/experiments/PhaseC_continuous/checkpoints/continuous_router_final.pt"
 
@@ -41,12 +44,12 @@ fi
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_continuous,router_checkpoint=${ROUTER_CKPT} \
+    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_continuous,router_checkpoint=${ROUTER_CKPT},timing_log_path=${TIMING_LOG} \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
     --limit 500 \
-    --output_path results/PhaseC_500_$(date +%Y%m%d_%H%M%S)
+    --output_path results/PhaseC_500_${RUN_ID}
 
 echo ""
 echo "Completed: $(date)"

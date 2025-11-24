@@ -30,14 +30,17 @@ echo ""
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/external/Dream/eval_instruct
 
+RUN_ID=$(date +%Y%m%d_%H%M%S)
+TIMING_LOG="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/reports/timing/P2_500_${RUN_ID}.json"
+
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p2_earlystop,cache_mode=none,early_stop_norm_threshold=0.01 \
+    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p2_earlystop,cache_mode=none,early_stop_norm_threshold=0.01,timing_log_path=${TIMING_LOG} \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
     --limit 500 \
-    --output_path results/P2_500_$(date +%Y%m%d_%H%M%S)
+    --output_path results/P2_500_${RUN_ID}
 
 echo ""
 echo "Completed: $(date)"

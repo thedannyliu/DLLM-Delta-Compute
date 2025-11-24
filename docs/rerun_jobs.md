@@ -1,28 +1,37 @@
 # Complete Re-run with Timing Metrics
 
-## Batch 1: No Dependencies (Submitted)
+**Status: AUTOMATED PIPELINE ACTIVE**
 
-| Phase | Job ID | Status | Notes |
-|-------|--------|--------|-------|
-| P1 (Traces) | 3643107 | RUNNING | Started earlier, ~14 min elapsed |
-| P0 (Baseline) | 3643149 | SUBMITTED | Just submitted |
-| P2 (Early Stop) | 3643150 | SUBMITTED | Just submitted |
-| P4 (Adaptive) | 3643151 | SUBMITTED | Just submitted |
-| Phase A (Heuristic) | 3643152 | SUBMITTED | Just submitted |
+## Batch 1: No Dependencies (RUNNING)
 
-## Batch 2: Training (Pending P1 completion)
+| Phase | Job ID | Status | Started | Notes |
+|-------|--------|--------|---------|-------|
+| P1 (Traces) | 3643107 | RUNNING | 12:26 | Will auto-trigger training |
+| P0 (Baseline) | 3643149 | RUNNING | 12:41 | |
+| P2 (Early Stop) | 3643150 | PENDING | - | Waiting for GPU |
+| P4 (Adaptive) | 3643151 | PENDING | - | Waiting for GPU |
+| Phase A (Heuristic) | 3643152 | PENDING | - | Waiting for GPU |
 
-Will submit after P1 completes and traces verified:
-- Train P3 Gate
-- Train Phase B Router  
-- Train Phase C Continuous Router
+## Batch 2: Training (AUTO-TRIGGERED when P1 completes)
 
-## Batch 3: Evaluations (Pending training completion)
+**Automation Active:** Background script (PID 4036511) monitoring P1
 
-Will submit after training completes:
-- P3 (Learned Gate)
-- Phase B (Router)
-- Phase C (Continuous)
+Will auto-submit after P1 completes and traces verified:
+- Train P3 Gate (~/30 min)
+- Train Phase B Router (~/30 min)
+- Train Phase C Continuous Router (~/30 min)
+
+Script: `scripts/wait_and_submit_training.sh`
+Log: `logs/auto_training_submit.log`
+
+## Batch 3: Evaluations (AUTO-TRIGGERED after training)
+
+Will auto-submit after all training completes:
+- P3 (Learned Gate) eval
+- Phase B (Router) eval
+- Phase C (Continuous) eval
+
+Script: `scripts/wait_and_submit_batch3.sh`
 
 ## Timeline
 
