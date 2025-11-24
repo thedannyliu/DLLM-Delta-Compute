@@ -3,7 +3,7 @@
 #SBATCH --account=coc
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:H100:1
+#SBATCH --gres=gpu:L40S:1
 #SBATCH --time=4:00:00
 #SBATCH --mem=80G
 #SBATCH --output=logs/%x_%j.out
