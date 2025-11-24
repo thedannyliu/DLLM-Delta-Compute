@@ -41,7 +41,7 @@ fi
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=phaseC_continuous,continuous_router_checkpoint=${ROUTER_CKPT},cache_warmup=5 \
+    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_continuous,router_checkpoint=${ROUTER_CKPT} \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \

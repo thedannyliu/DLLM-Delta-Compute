@@ -29,12 +29,13 @@ echo ""
 
 cd /home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/external/Dream/eval_instruct
 
-# Define cache schedule (alternating pattern for demo)
-CACHE_SCHEDULE="[0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1]"
+# Define cache schedule - comma-separated layer indices to cache
+# For 32 layers, cache every other layer: 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31
+CACHE_SCHEDULE="1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31"
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=phaseA_heuristic,cache_schedule=${CACHE_SCHEDULE},cache_warmup=5 \
+    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_ffn,cache_schedule=${CACHE_SCHEDULE} \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
