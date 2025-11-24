@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=eval_p2_100
 #SBATCH --account=coc
-#SBATCH --partition=ice-gpu
+#SBATCH --partition=coc-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:H100:1
+#SBATCH --gres=gpu:L40S:1
 #SBATCH --time=4:00:00
 #SBATCH --mem=80G
 #SBATCH --output=logs/%x_%j.out
