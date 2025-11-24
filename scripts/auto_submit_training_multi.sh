@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Monitor multiple P1 jobs (different GPU types)
-P1_JOBS="3644872 3644875 3644887 3644874"  # L40S A100 H100 H200
+P1_JOBS="3644946 3644875 3644887 3644874"  # L40S A100 H100 H200
 
 echo "========================================="
 echo "Monitoring Multiple P1 Jobs"

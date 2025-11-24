@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=eval_p4_100_l40s
 #SBATCH --account=coc
-#SBATCH --partition=coc-gpu
+#SBATCH --partition=ice-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:L40S:1
