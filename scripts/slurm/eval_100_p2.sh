@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=eval_p2_100
 #SBATCH --account=coc
+#SBATCH --partition=ice-gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:H100:1
