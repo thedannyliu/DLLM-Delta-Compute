@@ -44,7 +44,7 @@ fi
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p3_learned_gate,cache_mode=none,gate_checkpoint=${GATE_CKPT},timing_log_path=${TIMING_LOG} \
+    --model_args "pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p3_learned_gate,cache_mode=none,gate_checkpoint=${GATE_CKPT},timing_log_path=${TIMING_LOG}" \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \

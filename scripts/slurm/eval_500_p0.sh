@@ -35,7 +35,7 @@ TIMING_LOG="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute/reports/timi
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=none,timing_log_path=${TIMING_LOG} \
+    --model_args "pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=none,timing_log_path=${TIMING_LOG}" \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \

@@ -38,7 +38,7 @@ CACHE_SCHEDULE="1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31"
 
 python -m lm_eval \
     --model diffllm \
-    --model_args pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_ffn,cache_schedule=${CACHE_SCHEDULE},timing_log_path=${TIMING_LOG} \
+    --model_args "pretrained=Dream-org/Dream-v0-Instruct-7B,delta_mode=p0_baseline,cache_mode=l2c_ffn,cache_schedule=${CACHE_SCHEDULE},timing_log_path=${TIMING_LOG}" \
     --tasks gsm8k \
     --num_fewshot 5 \
     --batch_size 1 \
