@@ -1,0 +1,13 @@
+{
+  "num_samples": 500,
+  "total_time_seconds": 599.0406095981598,
+  "mean_time_per_sample": 1.1980812191963195,
+  "std_time_per_sample": 0.01623906235033443,
+  "median_time_per_sample": 1.1974636316299438,
+  "p95_latency": 1.200201940536499,
+  "p97_latency": 1.2005281519889832,
+  "p99_latency": 1.202649133205414,
+  "total_tokens_generated": 64000,
+  "mean_tokens_per_sample": 128.0,
+  "tokens_per_second": 106.83749811708358
+}
