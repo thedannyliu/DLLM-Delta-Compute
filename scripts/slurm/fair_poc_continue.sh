@@ -21,16 +21,16 @@
 # This continues with: P2 → P3 → P4 → Phase A → Phase B → Phase C
 ###############################################################################
 
-set -euo pipefail
+# Source bashrc first (before set -u to avoid unbound variable issues)
+source ~/.bashrc
+conda activate dcllm
+
+set -eo pipefail
 
 # Paths
 PROJECT_ROOT="/home/hice1/eliu354/scratch/Projects/DLLM-Delta-Compute"
 DREAM_ROOT="${PROJECT_ROOT}/external/Dream"
 cd "${PROJECT_ROOT}"
-
-# Activate environment
-source ~/.bashrc
-conda activate dcllm
 
 # Verify environment
 which python
@@ -80,7 +80,7 @@ echo ""
 echo "=== P2: Confidence-based Early Stop ==="
 echo "Testing delta_mode=p2_early_stop"
 python -m eval_instruct.lm_eval \
-    --model dream \
+    --model diffllm \
     --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=p2_early_stop,early_stop_confidence_threshold=0.95,early_stop_entropy_threshold=0.1 \
     --tasks ${TASK} \
     --batch_size ${BATCH_SIZE} \
@@ -96,7 +96,7 @@ echo "=== P3: Learned Gate (requires checkpoint) ==="
 if [ -f "${P3_CHECKPOINT}" ]; then
     echo "Using checkpoint: ${P3_CHECKPOINT}"
     python -m eval_instruct.lm_eval \
-        --model dream \
+        --model diffllm \
         --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=p3_learned_gate,gate_checkpoint=${P3_CHECKPOINT},gate_threshold=0.5 \
         --tasks ${TASK} \
         --batch_size ${BATCH_SIZE} \
@@ -113,7 +113,7 @@ fi
 echo ""
 echo "=== P4: Adaptive Stride ==="
 python -m eval_instruct.lm_eval \
-    --model dream \
+    --model diffllm \
     --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=p4_adaptive,adaptive_window=4,adaptive_threshold=0.01 \
     --tasks ${TASK} \
     --batch_size ${BATCH_SIZE} \
@@ -127,7 +127,7 @@ cp "${RESULTS_DIR}/P4_adaptive/results.json" "${RESULTS_DIR}/P4_adaptive.json" 2
 echo ""
 echo "=== Phase A: Binary Skip Router ==="
 python -m eval_instruct.lm_eval \
-    --model dream \
+    --model diffllm \
     --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=phaseA_binary_skip \
     --tasks ${TASK} \
     --batch_size ${BATCH_SIZE} \
@@ -143,7 +143,7 @@ echo "=== Phase B: Feature-based Router ==="
 if [ -f "${PHASEB_CHECKPOINT}" ]; then
     echo "Using checkpoint: ${PHASEB_CHECKPOINT}"
     python -m eval_instruct.lm_eval \
-        --model dream \
+        --model diffllm \
         --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=phaseB_router,router_checkpoint=${PHASEB_CHECKPOINT} \
         --tasks ${TASK} \
         --batch_size ${BATCH_SIZE} \
@@ -162,7 +162,7 @@ echo "=== Phase C: Continuous Router ==="
 if [ -f "${PHASEC_CHECKPOINT}" ]; then
     echo "Using checkpoint: ${PHASEC_CHECKPOINT}"
     python -m eval_instruct.lm_eval \
-        --model dream \
+        --model diffllm \
         --model_args pretrained=${MODEL},dtype=bfloat16,max_length=2048,diffusion_steps=${DIFFUSION_STEPS},delta_mode=phaseC_continuous,router_checkpoint=${PHASEC_CHECKPOINT} \
         --tasks ${TASK} \
         --batch_size ${BATCH_SIZE} \
