@@ -5,7 +5,7 @@
 #SBATCH --qos=coc-ice
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:H100:1
+#SBATCH --gres=gpu:1
 #SBATCH --constraint=nvidia-gpu
 #SBATCH --time=16:00:00
 #SBATCH --mem=384G
