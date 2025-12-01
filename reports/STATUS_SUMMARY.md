@@ -1,6 +1,6 @@
 # DLLM-Delta-Compute PoC 狀態報告
 
-**更新時間**: 2024-11-25 
+**更新時間**: 2024-11-30 
 **Branch**: PoC-1
 
 ---
@@ -12,11 +12,11 @@
 | P0 | Baseline | ✅ Ready | 評估完成, GSM8K Acc: 42-46% |
 | P1 | Teacher Traces | ✅ Ready | 評估完成, 100 traces 已生成 |
 | P2 | Early Stop | ✅ Ready | 評估完成, GSM8K Acc: 42-46% |
-| P3 | Learned Gate | ⚠️ 待驗證 | 訓練完成, 需評估 |
+| P3 | Learned Gate | ✅ Ready | 訓練完成, 最小測試通過 |
 | P4 | Adaptive Stride | ✅ Ready | 評估完成, GSM8K Acc: 32-36% |
-| Phase A | Heuristic Caching | 🔧 已修復 | cache_schedule bug 已修復, 需重跑 |
-| Phase B | Learned Router | ⚠️ 待驗證 | 訓練完成, 需評估 |
-| Phase C | Continuous Router | ⚠️ 待驗證 | 訓練完成, 需評估 |
+| Phase A | Heuristic Caching | ✅ Ready | cache_schedule bug 已修復, 測試通過 |
+| Phase B | Learned Router | ✅ Ready | 訓練完成, 最小測試通過 |
+| Phase C | Continuous Router | ✅ Ready | 訓練完成, 最小測試通過 |
 
 ---
 
@@ -83,7 +83,19 @@
 - **修改檔案**:
   - `external/Dream/modeling/generation_utils.py` (line 433-444)
   - `scripts/slurm/eval_100_phaseA*.sh` (16 files)
-- **狀態**: ✅ 已修復並提交
+- **狀態**: ✅ 已修復、已測試、通過
+
+---
+
+## ✅ 最小測試結果 (2024-11-30)
+
+**Job 3693944 - H200 GPU**:
+```
+P3 (Learned Gate):   PASS  ✓ Loaded learned gate
+Phase A (Heuristic): PASS  ✓ Parsed cache_schedule: 16 layers
+Phase B (Router):    PASS  ✓ Loaded learned router
+Phase C (Continuous):PASS  ✓ Loaded continuous router
+```
 
 ---
 
@@ -119,19 +131,22 @@ reports/
 
 ## 🚀 下一步行動
 
-### 立即需要
-1. ⏳ 等待 `test_all_phases` job (3693875) 完成
-2. 驗證 Phase A 的 cache_schedule 修復
-3. 驗證 P3/PhaseB/PhaseC 訓練後的模型
+### 立即可執行
+1. ✅ 最小測試通過 - 所有 phases 可進行 100 samples 完整評估
+2. 提交 100 samples 評估:
+   - Phase A (Heuristic Caching) - 需要重跑
+   - P3 (Learned Gate) - 首次評估
+   - Phase B (Learned Router) - 首次評估
+   - Phase C (Continuous Router) - 首次評估
 
-### 後續
-1. 如果最小測試通過，重新提交 100 samples 評估:
-   - Phase A (Heuristic Caching)
-   - P3 (Learned Gate)
-   - Phase B (Learned Router)
-   - Phase C (Continuous Router)
-
-2. 比較各 Phase 的效能和準確率
+### 評估命令
+```bash
+# 提交 100 samples 評估
+sbatch scripts/slurm/eval_100_phaseA_l40s_h100_a100.sh
+sbatch scripts/slurm/eval_100_p3_l40s_h100_a100.sh
+sbatch scripts/slurm/eval_100_phaseB_l40s_h100_a100.sh
+sbatch scripts/slurm/eval_100_phaseC_l40s_h100_a100.sh
+```
 
 ---
 
