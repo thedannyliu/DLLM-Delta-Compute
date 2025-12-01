@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:A100:1
-#SBATCH --time=4:00:00
-#SBATCH --mem=80G
+#SBATCH --time=2:00:00
+#SBATCH --mem=40G
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 
