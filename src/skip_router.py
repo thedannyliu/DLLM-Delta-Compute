@@ -148,27 +148,39 @@ class SkipRouter(ContinuousRouter):
     
     @staticmethod
     def load(filepath: str) -> 'SkipRouter':
-        """Load skip router from checkpoint."""
+        """Load skip router from checkpoint.
+        
+        Also supports loading from a ContinuousRouter checkpoint for compatibility.
+        """
         checkpoint = torch.load(filepath, map_location='cpu')
         
-        config_dict = checkpoint['config']
-        skip_config_dict = checkpoint.get('skip_config', {})
+        # Check if this is a SkipRouter checkpoint or ContinuousRouter checkpoint
+        checkpoint_type = checkpoint.get('type', 'continuous_router')
         
-        config = SkipRouterConfig(
-            num_layers=config_dict['num_layers'],
-            time_embedding_dim=config_dict.get('time_embedding_dim', 64),
-            hidden_dim=config_dict.get('hidden_dim', 128),
-            num_hidden_layers=config_dict.get('num_hidden_layers', 2),
-            dropout=config_dict.get('dropout', 0.1),
-            time_encoding=config_dict.get('time_encoding', 'sinusoidal'),
-            skip_loss_weight=skip_config_dict.get('skip_loss_weight', 0.1),
-            target_skip_ratio=skip_config_dict.get('target_skip_ratio', 0.25),
-        )
+        if checkpoint_type == 'skip_router':
+            # Native SkipRouter checkpoint
+            config_dict = checkpoint['config']
+            skip_config_dict = checkpoint.get('skip_config', {})
+            
+            config = SkipRouterConfig(
+                num_layers=config_dict['num_layers'],
+                time_embedding_dim=config_dict.get('time_embedding_dim', 64),
+                hidden_dim=config_dict.get('hidden_dim', 128),
+                num_hidden_layers=config_dict.get('num_hidden_layers', 2),
+                dropout=config_dict.get('dropout', 0.1),
+                time_encoding=config_dict.get('time_encoding', 'sinusoidal'),
+                skip_loss_weight=skip_config_dict.get('skip_loss_weight', 0.1),
+                target_skip_ratio=skip_config_dict.get('target_skip_ratio', 0.25),
+            )
+            
+            router = SkipRouter(config)
+            router.load_state_dict(checkpoint['state_dict'])
+            print(f"✓ Loaded SkipRouter from {filepath} ({router.num_params:,} params)")
+        else:
+            # Fallback: Treat as ContinuousRouter checkpoint and convert
+            print(f"Converting ContinuousRouter checkpoint to SkipRouter...")
+            router = SkipRouter.from_continuous_router(filepath)
         
-        router = SkipRouter(config)
-        router.load_state_dict(checkpoint['state_dict'])
-        
-        print(f"✓ Loaded SkipRouter from {filepath} ({router.num_params:,} params)")
         return router
     
     @staticmethod
