@@ -139,5 +139,30 @@ You can adapt field ordering slightly as long as the same information is present
   ```
 - SLURM jobs:
   - `3960614` (cot_fix_test - completed, verified)
-  - `3960636` (poc_official_eval 50 samples - running)
+  - `3960636` (poc_official_eval 50 samples - completed)
+
+### 2025-12-08 08:00 UTC — CRITICAL: Switch to Base-7B Model
+- Author: AI Assistant
+- Phases / Modules: [master_plan.md, evaluation pipeline]
+- Goal:
+  - Fix ~25% accuracy issue by switching to correct Base model.
+- Actions:
+  - **CRITICAL FINDING**: Base-7B achieves ~65% vs Instruct-7B only ~25% on GSM8K CoT
+  - Updated `docs/master_plan.md` with:
+    - Changed model to `Dream-org/Dream-v0-Base-7B`
+    - Added official CoT configuration notes
+    - Added CoT-specific training notes (P2 threshold sweep, P3/router retraining)
+  - Created `scripts/slurm/poc_base_200.sh` (200-sample eval with Base model)
+  - Created `scripts/slurm/p1_base_traces.sh` (trace collection for training)
+  - Canceled job 3960636 (was using Instruct model)
+- Status / Outcome:
+  - Job 3960753: 200-sample PoC eval (P0/P2/P4/PhaseA) - running
+  - Job 3960754: P1 trace collection (300 samples) - running
+- SLURM jobs:
+  - `3960753` (poc_base_200 - running)
+  - `3960754` (p1_base_traces - running)
+- Next steps / TODOs:
+  - Wait for P0 baseline ~65% confirmation
+  - Train P3/PhaseB/C on new traces
+  - Run full 1500-sample eval
 
