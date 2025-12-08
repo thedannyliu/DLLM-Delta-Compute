@@ -99,7 +99,37 @@ def main():
     params = manager.get_all_parameters()
     optimizer = torch.optim.Adam(params, lr=args.learning_rate)
     
-    # Training loop (simplified)
+    # Load P1 traces
+    from glob import glob
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+    
+    trace_files = glob(f"{args.traces_dir}/*.pt")
+    print(f"\nLoading {len(trace_files)} trace files from {args.traces_dir}...")
+    
+    if len(trace_files) == 0:
+        print("ERROR: No trace files found! Using synthetic training as fallback.")
+        use_synthetic = True
+    else:
+        use_synthetic = False
+        # Load traces
+        try:
+            from tracing import TraceCollector
+            traces_data = []
+            for i, fpath in enumerate(trace_files):
+                if i % 50 == 0:
+                    print(f"Loading trace {i+1}/{len(trace_files)}...", end='\r')
+                try:
+                    collector = TraceCollector.load(fpath)
+                    stats = collector.get_all_stats()
+                    traces_data.append(stats)
+                except Exception as e:
+                    print(f"\nWarning: Failed to load {fpath}: {e}")
+            print(f"\nLoaded {len(traces_data)} traces successfully")
+        except ImportError:
+            print("Warning: TraceCollector not available, using synthetic training")
+            use_synthetic = True
+    
     print(f"\nStarting training for {args.num_epochs} epochs...")
     
     manager.train()
@@ -109,39 +139,74 @@ def main():
         epoch_losses = []
         epoch_shallow_ratios = []
         
-        # Simplified training: random progress values
-        for _ in range(100):  # 100 mini-batches per epoch
-            progress = np.random.uniform(0, 1)
-            p_tensor = torch.tensor(progress, dtype=torch.float32, device=device)
-            
-            # Get all gate scores
-            total_shallow = 0
-            total_gates = 0
-            gate_loss = torch.tensor(0.0, device=device, requires_grad=True)
-            
-            for layer_idx in adapted_layers:
-                gate = manager.router(p_tensor, layer_idx, hidden_state=None)
-                # Regularize to encourage shallow path (low gate score)
-                gate_loss = gate_loss + gate ** 2
+        if use_synthetic:
+            # Synthetic training: more iterations with random progress values
+            num_batches = 500  # More batches per epoch for better training
+            for batch_idx in range(num_batches):
+                progress = np.random.uniform(0, 1)
+                p_tensor = torch.tensor(progress, dtype=torch.float32, device=device)
                 
-                total_gates += 1
-                if gate.item() < 0.5:
-                    total_shallow += 1
-            
-            # Normalize loss
-            loss = gate_loss / len(adapted_layers)
-            
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            
-            epoch_losses.append(loss.item())
-            epoch_shallow_ratios.append(total_shallow / max(1, total_gates))
+                # Get all gate scores
+                total_shallow = 0
+                total_gates = 0
+                gate_loss = torch.tensor(0.0, device=device, requires_grad=True)
+                
+                for layer_idx in adapted_layers:
+                    gate = manager.router(p_tensor, layer_idx, hidden_state=None)
+                    # Regularize to encourage shallow path (low gate score)
+                    gate_loss = gate_loss + gate ** 2
+                    
+                    total_gates += 1
+                    if gate.item() < 0.5:
+                        total_shallow += 1
+                
+                # Normalize loss
+                loss = gate_loss / len(adapted_layers)
+                
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+                
+                epoch_losses.append(loss.item())
+                epoch_shallow_ratios.append(total_shallow / max(1, total_gates))
+        else:
+            # Real trace-based training
+            for trace_idx, trace_stats in enumerate(traces_data):
+                for layer_idx, step_dict in trace_stats.items():
+                    for step_idx, layer_stats in step_dict.items():
+                        if layer_idx in adapted_layers:
+                            # Calculate progress (time)
+                            progress = step_idx / 256.0  # Assume 256 total steps
+                            p_tensor = torch.tensor(progress, dtype=torch.float32, device=device)
+                            
+                            # Target based on FFN cosine similarity
+                            # High similarity = can skip, Low similarity = must compute
+                            target_skip = 0.0
+                            if hasattr(layer_stats, 'ffn_cosine_sim') and layer_stats.ffn_cosine_sim is not None:
+                                target_skip = float(layer_stats.ffn_cosine_sim > 0.95)
+                            
+                            # Forward pass
+                            gate = manager.router(p_tensor, layer_idx, hidden_state=None)
+                            
+                            # Binary cross-entropy style loss
+                            # gate close to 0 = skip, gate close to 1 = compute
+                            if target_skip > 0.5:  # Should skip
+                                loss = gate ** 2  # Encourage low gate
+                            else:  # Should compute
+                                loss = (1 - gate) ** 2  # Encourage high gate
+                            
+                            optimizer.zero_grad()
+                            loss.backward()
+                            optimizer.step()
+                            
+                            epoch_losses.append(loss.item())
+                            epoch_shallow_ratios.append(1.0 if gate.item() < 0.5 else 0.0)
         
-        avg_loss = np.mean(epoch_losses)
-        avg_shallow_ratio = np.mean(epoch_shallow_ratios)
+        avg_loss = np.mean(epoch_losses) if epoch_losses else 0.0
+        avg_shallow_ratio = np.mean(epoch_shallow_ratios) if epoch_shallow_ratios else 0.0
         
         print(f"Epoch {epoch+1}/{args.num_epochs} - Loss: {avg_loss:.4f}, Shallow Ratio: {avg_shallow_ratio:.2%}")
+
         
         if args.use_wandb:
             wandb.log({
