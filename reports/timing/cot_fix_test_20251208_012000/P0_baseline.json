@@ -1,0 +1,17 @@
+{
+  "num_samples": 10,
+  "total_time_seconds": 274.800989151001,
+  "mean_time_per_sample": 27.480098915100097,
+  "std_time_per_sample": 1.2444116426374454,
+  "median_time_per_sample": 26.803095936775208,
+  "p95_latency": 29.52602415084839,
+  "p97_latency": 29.610791568756103,
+  "p99_latency": 29.69555898666382,
+  "total_tokens_generated": 2560,
+  "mean_tokens_per_sample": 256.0,
+  "tokens_per_second": 9.31583255180097,
+  "avg_steps_skipped": 0.0,
+  "skip_ratio_steps": 0.0,
+  "avg_layers_cached": 0.0,
+  "skip_ratio_layers": 0.0
+}

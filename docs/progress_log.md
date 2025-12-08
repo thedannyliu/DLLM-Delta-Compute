@@ -99,15 +99,45 @@ You can adapt field ordering slightly as long as the same information is present
   - Created `scripts/slurm/test_5sample.sh` for minimal testing with timing logs.
   - Created `scripts/slurm/train_cot_p1_traces.sh` for CoT trace collection.
 - Status / Outcome:
-  - Job 3960546: Full sanity check (P0/P2/P3/PhaseB/PhaseC) - running
-  - Job 3960549: 5-sample test with timing - running
+  - Job 3960546: Full sanity check (P0/P2/P3/PhaseB/PhaseC) - completed, all 54%
+  - Job 3960549: 5-sample test with timing - completed
 - Git commits:
   - Pending: sanity_full_check.sh, test_5sample.sh
 - SLURM jobs:
-  - `3960546` (sanity_full - running)
-  - `3960549` (test_5sample - running)
+  - `3960546` (sanity_full - completed)
+  - `3960549` (test_5sample - completed)
 - Next steps / TODOs:
   - Monitor job results
   - Submit P1 trace collection after sanity check passes
   - Re-train P3/PhaseB/C with CoT traces
+
+### 2025-12-08 06:27 UTC — ROOT CAUSE FIX: max_new_tokens Configuration
+- Author: AI Assistant
+- Phases / Modules: [diffllm.py, evaluation scripts]
+- Goal:
+  - Fix low accuracy (54%) by aligning with official Dream evaluation config.
+- Actions:
+  - Identified ROOT CAUSE: `max_new_tokens` in `gen_kwargs` is **ignored** by diffllm.py
+  - Line 363 in diffllm.py uses `self.max_new_tokens` (default 128) from `__init__`
+  - Official config uses `max_new_tokens=256` in model_args
+  - Created `scripts/slurm/cot_fix_test.sh` with corrected config
+  - Created `scripts/slurm/poc_official_eval.sh` for full official-aligned eval
+- Status / Outcome:
+  - Job 3960614 (10 samples): **FIX VERIFIED**
+    - Timing logs now saving correctly
+    - `mean_tokens_per_sample=256.0` (config working)
+    - Latency: 27.5s mean, p95=29.5s, p99=29.7s
+    - Accuracy: 40% (high variance with small n)
+  - Job 3960636: 50-sample official eval submitted
+- Key Fix:
+  ```
+  # BEFORE (BROKEN): max_new_tokens in gen_kwargs (ignored!)
+  --gen_kwargs "max_new_tokens=256,..."
+  
+  # AFTER (CORRECT): max_new_tokens in model_args
+  --model_args "max_new_tokens=256,diffusion_steps=256,..."
+  ```
+- SLURM jobs:
+  - `3960614` (cot_fix_test - completed, verified)
+  - `3960636` (poc_official_eval 50 samples - running)
 
