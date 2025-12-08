@@ -97,6 +97,64 @@ You can simplify the template for small smoke tests (e.g., 1-step sanity runs) b
 
 *(Add new experiment blocks directly below this line, newest first.)*
 
+### 2025-12-08 16:56 UTC — Full PoC Evaluation with Base Model (200 Samples)
+- Phase: P0-P4, PhaseA-E
+- Goal: Complete PoC evaluation with Dream-v0-Base-7B using official CoT config.
+- SLURM job id: `3960957` (RUNNING 5hr+)
+- Script: `scripts/slurm/poc_all_phases.sh`
+- Model: `Dream-org/Dream-v0-Base-7B`
+- Config: max_new_tokens=256, diffusion_steps=256, temp=0.0, 8-shot, batch_size=1
+- **RESULTS (200 samples)**:
+
+| Phase | Accuracy | Mean Latency | Tokens/s | Notes |
+|-------|----------|--------------|----------|-------|
+| P0 Baseline | **76%** | 9.3s | 27.7 | Reference |
+| P2 conf=0.5 | 76% | 9.2s | 28.0 | No early stop |
+| P2 conf=0.4 | 76% | 9.1s | 28.2 | No early stop |
+| P3 Gate | 76% | 10.5s | 24.4 | **SLOWER** |
+| P4 Adaptive | 76% | 10.2s | 25.0 | **SLOWER** |
+| PhaseA Cache | 76% | 9.3s | 27.6 | No speedup |
+| PhaseB Router | 76% | 9.3s | 27.6 | No speedup |
+| PhaseC Router | 76% | 9.3s | 27.6 | No speedup |
+| PhaseD Skip | 76% | 9.2s | 27.7 | No speedup |
+
+- **SANITY CHECK NEEDED**: All phases show identical 76% accuracy
+- Status: PhaseE running
+- Logs: `logs/poc_all_phases_3960957.out`
+- Timing: `reports/timing/poc_all_phases_200_20251208_063832/`
+
+### 2025-12-08 12:00 UTC — Training Jobs Summary
+- Phase: P3, PhaseB, PhaseC, PhaseD, PhaseE
+- Goal: Train gates/routers using CoT P1 traces from Base model.
+
+| Job ID | Phase | Status | Duration | Notes |
+|--------|-------|--------|----------|-------|
+| 3960985 | P3 Gate | **COMPLETED** | 27min | Oracle labels generated |
+| 3960986 | PhaseB Router | **COMPLETED** | 1hr15min | Using traces |
+| 3960987 | PhaseC Router | **TIMEOUT** | 4hr | Need longer time |
+| 3960988 | PhaseD Skip | **TIMEOUT** | 4hr | Need longer time |
+| 3960989 | PhaseE Flexi | COMPLETED (bad) | 19s | Synthetic data only |
+| 3960994 | PhaseE Flexi | **COMPLETED** | 2hr2min | Fixed, uses traces |
+
+- Scripts: `scripts/slurm/train_p3_cot.sh`, `train_phaseB_cot.sh`, etc.
+- Traces: `experiments/P1_traces_base_20251208_030520/` (300 traces)
+- Checkpoints saved:
+  - `experiments/P3_gate_cot_*/checkpoints/learned_gate_final.pt`
+  - `experiments/PhaseB_router_cot_*/checkpoints/router_final.pt`
+  - `experiments/PhaseE_flexi_cot_20251208_071920/checkpoints/flexi_depth_final.pt`
+- **TODO**: Resubmit PhaseC/D with 8hr time limit
+
+### 2025-12-08 08:00 UTC — P1 Trace Collection (Base Model)
+- Phase: P1
+- Goal: Collect traces from Base model for training gates/routers.
+- SLURM job id: `3960754` (COMPLETED)
+- Script: `scripts/slurm/p1_base_traces.sh`
+- Samples: 300
+- Accuracy: 77% (flexible-extract)
+- Duration: 55min
+- Output: `experiments/P1_traces_base_20251208_030520/`
+- Logs: `logs/p1_base_traces_3960754.out`
+
 ### 2025-12-08 00:18 UTC — Phase D/E Minimal Validation Test
 - Phase: Phase D, Phase E
 - Goal: Verify Phase D/E module imports, save/load, and forward pass work correctly.

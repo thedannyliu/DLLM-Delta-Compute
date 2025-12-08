@@ -7,7 +7,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=nvidia-gpu
-#SBATCH --time=4:00:00
+#SBATCH --time=8:00:00
 #SBATCH --mem=256G
 #SBATCH --output=logs/train_phaseD_cot_%j.out
 #SBATCH --error=logs/train_phaseD_cot_%j.err
