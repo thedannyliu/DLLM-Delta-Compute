@@ -159,10 +159,25 @@ P0 (baseline teacher)
 
 **Primary evaluation settings**
 
-- **Model:** `Dream-org/Dream-v0-Instruct-7B`
+- **Model:** `Dream-org/Dream-v0-Base-7B` *(Updated 2025-12-08: Base model achieves ~65% on GSM8K CoT while Instruct model only achieves ~25%)*
+- **Official CoT Configuration (aligned with Dream eval):**
+  - `max_new_tokens=256` *(must be in model_args, NOT gen_kwargs)*
+  - `diffusion_steps=256`
+  - `temperature=0.0` (greedy)
+  - `top_p=0.95`
+  - `batch_size=1`
+  - `add_bos_token=true`
+  - `num_fewshot=8`
+  - Task: `gsm8k_cot`
 - **Tasks (Tier A – required):**
   - `gsm8k_cot` via Dream’s `eval_instruct` / lm‑eval harness (EM accuracy).
   - At least one **non‑math subject** (e.g. `mmlu_astronomy`) to probe depth behavior on non‑chain‑of‑thought tasks.
+
+**CoT-Specific Training Notes (added 2025-12-08)**
+
+- **P2 Early Stop Thresholds:** The original `early_stop_confidence_threshold=0.95` and `entropy_threshold=0.1` were tuned for short-answer tasks. For CoT, re-sweep is required (try: `conf=0.6-0.8`, `entropy=0.5-1.5`) to avoid stopping mid-reasoning or never stopping.
+- **P3 Gate / PhaseB/C Router Retraining:** Gates and routers trained on short-answer traces may not transfer well to CoT. Collect new P1 traces with CoT prompts and retrain before evaluating.
+- **P1 Trace Collection:** Use official CoT config (256 steps, 8-shot, gsm8k_cot) on train split.
 
 **Core metrics per configuration**
 
