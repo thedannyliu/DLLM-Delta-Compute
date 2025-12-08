@@ -100,28 +100,31 @@ You can simplify the template for small smoke tests (e.g., 1-step sanity runs) b
 ### 2025-12-08 16:56 UTC — Full PoC Evaluation with Base Model (200 Samples)
 - Phase: P0-P4, PhaseA-E
 - Goal: Complete PoC evaluation with Dream-v0-Base-7B using official CoT config.
-- SLURM job id: `3960957` (RUNNING 5hr+)
+- SLURM job id: `3960957` (**COMPLETED** 5hr22min)
 - Script: `scripts/slurm/poc_all_phases.sh`
 - Model: `Dream-org/Dream-v0-Base-7B`
 - Config: max_new_tokens=256, diffusion_steps=256, temp=0.0, 8-shot, batch_size=1
 - **RESULTS (200 samples)**:
 
-| Phase | Accuracy | Mean Latency | Tokens/s | Notes |
-|-------|----------|--------------|----------|-------|
-| P0 Baseline | **76%** | 9.3s | 27.7 | Reference |
-| P2 conf=0.5 | 76% | 9.2s | 28.0 | No early stop |
-| P2 conf=0.4 | 76% | 9.1s | 28.2 | No early stop |
-| P3 Gate | 76% | 10.5s | 24.4 | **SLOWER** |
-| P4 Adaptive | 76% | 10.2s | 25.0 | **SLOWER** |
-| PhaseA Cache | 76% | 9.3s | 27.6 | No speedup |
-| PhaseB Router | 76% | 9.3s | 27.6 | No speedup |
-| PhaseC Router | 76% | 9.3s | 27.6 | No speedup |
-| PhaseD Skip | 76% | 9.2s | 27.7 | No speedup |
+| Phase | Accuracy | Mean Latency | Tokens/s | Skip Ratio | Notes |
+|-------|----------|--------------|----------|------------|-------|
+| P0 Baseline | **76%** | 9.3s | 27.7 | - | Reference |
+| P2 conf=0.5 | 76% | 9.2s | 28.0 | 0% | No early stop |
+| P2 conf=0.4 | 76% | 9.1s | 28.2 | 0% | No early stop |
+| P3 Gate | 76% | 10.5s | 24.4 | 0% | **SLOWER** |
+| P4 Adaptive | 76% | 10.2s | 25.0 | 0% | **SLOWER** |
+| PhaseA Cache | 76% | 9.3s | 27.6 | 0% | No speedup |
+| PhaseB Router | 76% | 9.3s | 27.6 | 0% | No speedup |
+| PhaseC Router | 76% | 9.3s | 27.6 | 0% | No speedup |
+| PhaseD Skip | 76% | 9.2s | 27.7 | 0% | No speedup |
+| PhaseE Flexi | 76% | 9.2s | 27.7 | 0% | No speedup |
 
-- **SANITY CHECK NEEDED**: All phases show identical 76% accuracy
-- Status: PhaseE running
+- **CRITICAL**: All phases show **0% skip ratio** - routers not effective
+- **ROOT CAUSE**: SkipRouter.load failed on ContinuousRouter checkpoint (fixed in commit 8fcc5f5)
+- Status: **COMPLETED**
 - Logs: `logs/poc_all_phases_3960957.out`
 - Timing: `reports/timing/poc_all_phases_200_20251208_063832/`
+
 
 ### 2025-12-08 12:00 UTC — Training Jobs Summary
 - Phase: P3, PhaseB, PhaseC, PhaseD, PhaseE
