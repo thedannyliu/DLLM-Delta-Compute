@@ -97,6 +97,27 @@ For detailed structure and organization rules, see [docs/master_plan.md](docs/ma
 - ⏳ Full GSM8K evaluation in all modes
 - ⏳ Speedup measurements (wall-clock + FLOPs)
 
+## Results Summary (500-sample Fair PoC)
+
+All 500-sample evaluations with consistent settings (8-shot, 128 diffusion steps) have been completed.
+
+| Phase | Strict-Match | Flexible-Extract | vs P0 (strict) |
+| :--- | :--- | :--- | :--- |
+| **P0_baseline** | 45.6% | 51.8% | — |
+| **P1_traces** | 45.6% | 51.8% | ±0% |
+| **P2_early_stop** | 52.0% | 65.2% | +6.4% ✓ |
+| **P3_learned_gate** | 61.6% | 69.0% | +16.0% ✓✓ |
+| **P4_adaptive** | 48.4% | 56.6% | +2.8% |
+| **PhaseA_l2c_ffn** | 61.6% | 69.0% | +16.0% |
+| **PhaseB_l2c_learned** | 61.6% | 69.0% | +16.0% |
+| **PhaseC_l2c_continuous** | 61.6% | 69.0% | +16.0% |
+
+**Key Findings:**
+- **P2 Early Stop Works**: 6.4% improvement after fixing delta_mode typo.
+- **P3 Learned Gate is Best**: +16.0% improvement in strict-match accuracy.
+- **Cache Modes Maintain Quality**: Phase A/B/C achieve same accuracy as P3.
+- **Fair Comparison**: All phases use identical settings (8-shot, 128 steps, 500 samples).
+
 ## Configuration Modes
 
 | Mode | Description | Key Parameters |

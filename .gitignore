@@ -15,7 +15,7 @@ experiments/*/traces/*.pt
 docs/build/
 
 # Large binary files in material
-docs/material/
+# docs/material/
 
 # Environment
 .env
