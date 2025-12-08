@@ -29,3 +29,9 @@ venv/
 
 # Slurm output files
 slurm-*.out
+
+
+experiments/*
+reports/*
+checkpoints/*
+
