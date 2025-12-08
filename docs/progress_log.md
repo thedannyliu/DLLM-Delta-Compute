@@ -79,10 +79,35 @@ You can adapt field ordering slightly as long as the same information is present
   - `c6a590a` (Phase D/E training scripts and test)
   - Previous commit (Phase D/E modules and generation_utils integration)
 - SLURM jobs:
-  - `3960463` (test_phaseDE - running)
+  - `3960463` (test_phaseDE - passed)
 - Next steps / TODOs:
   - Wait for test job to complete and verify imports/forward pass work.
   - Collect P1 traces on GSM8K CoT for training Phase D/E routers.
   - Train Phase D skip router from Phase C checkpoint.
   - Train Phase E FlexiDepth router+adapter.
+
+### 2025-12-08 05:40 UTC — Sanity Check Investigation & Bug Fix
+- Author: AI Assistant
+- Phases / Modules: [P3, PhaseB, PhaseC, sanity_full_check.sh]
+- Goal:
+  - Investigate why P3/PhaseB/PhaseC produce 100% identical outputs in sanity check.
+- Actions:
+  - Analyzed existing sanity check results (100/100 samples identical across P3/PhaseB/PhaseC).
+  - **Found root cause**: P3 gate checkpoint path was wrong (`gate_final.pt` → `learned_gate_final.pt`).
+  - Confirmed PhaseB/PhaseC identical outputs are *expected* (FFN caching = same output, just faster).
+  - Created `scripts/slurm/sanity_full_check.sh` with corrected checkpoint paths.
+  - Created `scripts/slurm/test_5sample.sh` for minimal testing with timing logs.
+  - Created `scripts/slurm/train_cot_p1_traces.sh` for CoT trace collection.
+- Status / Outcome:
+  - Job 3960546: Full sanity check (P0/P2/P3/PhaseB/PhaseC) - running
+  - Job 3960549: 5-sample test with timing - running
+- Git commits:
+  - Pending: sanity_full_check.sh, test_5sample.sh
+- SLURM jobs:
+  - `3960546` (sanity_full - running)
+  - `3960549` (test_5sample - running)
+- Next steps / TODOs:
+  - Monitor job results
+  - Submit P1 trace collection after sanity check passes
+  - Re-train P3/PhaseB/C with CoT traces
 
