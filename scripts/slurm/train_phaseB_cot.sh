@@ -15,6 +15,7 @@
 # ==============================================================================
 # Train PhaseB Learned Router for CoT with Base Model Traces
 # ==============================================================================
+# Uses train_learned_router.py which is different from train_continuous_router.py
 
 set -e
 
@@ -37,10 +38,10 @@ OUTPUT_DIR="experiments/PhaseB_router_cot_${TIMESTAMP}"
 WANDB_PROJECT="dllm_poc_base_200"
 
 mkdir -p ${OUTPUT_DIR}/checkpoints
-mkdir -p ${OUTPUT_DIR}/logs
 mkdir -p logs
 
 export WANDB_PROJECT=${WANDB_PROJECT}
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 
 echo "=============================================="
 echo "Train PhaseB Learned Router (CoT - Base Model)"
@@ -50,14 +51,28 @@ echo "Output: ${OUTPUT_DIR}"
 echo "GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 echo "=============================================="
 
-python scripts/training/train_learned_router.py \
-    --traces_dir ${TRACES_DIR} \
-    --output_dir ${OUTPUT_DIR}/checkpoints \
-    --epochs 20 \
-    --batch_size 32 \
-    --lr 1e-3 \
-    --wandb_project ${WANDB_PROJECT} \
-    --wandb_run_name "PhaseB_router_cot_${TIMESTAMP}"
+# Check if train_learned_router.py exists and its args
+if python scripts/training/train_learned_router.py --help 2>&1 | grep -q "trace_dirs"; then
+    # Uses trace_dirs (plural)
+    python scripts/training/train_learned_router.py \
+        --trace_dirs ${TRACES_DIR} \
+        --output_dir ${OUTPUT_DIR}/checkpoints \
+        --num_epochs 20 \
+        --batch_size 32 \
+        --learning_rate 1e-3
+elif python scripts/training/train_learned_router.py --help 2>&1 | grep -q "trace_dir"; then
+    # Uses trace_dir (singular)
+    python scripts/training/train_learned_router.py \
+        --trace_dir ${TRACES_DIR} \
+        --output_dir ${OUTPUT_DIR}/checkpoints \
+        --num_epochs 20 \
+        --batch_size 32 \
+        --learning_rate 1e-3
+else
+    echo "ERROR: Cannot determine correct args for train_learned_router.py"
+    python scripts/training/train_learned_router.py --help
+    exit 1
+fi
 
 echo ""
 echo "=============================================="

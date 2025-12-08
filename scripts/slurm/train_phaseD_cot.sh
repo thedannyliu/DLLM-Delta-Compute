@@ -15,7 +15,8 @@
 # ==============================================================================
 # Train PhaseD Skip Router for CoT with Base Model Traces
 # ==============================================================================
-# Reuses the continuous router architecture but with skip semantics
+# PhaseD reuses the continuous router architecture but with skip semantics
+# Uses the same training script as PhaseC
 
 set -e
 
@@ -41,6 +42,7 @@ mkdir -p ${OUTPUT_DIR}/checkpoints
 mkdir -p logs
 
 export WANDB_PROJECT=${WANDB_PROJECT}
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 
 echo "=============================================="
 echo "Train PhaseD Skip Router (CoT - Base Model)"
@@ -50,26 +52,19 @@ echo "Output: ${OUTPUT_DIR}"
 echo "GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 echo "=============================================="
 
-# PhaseD uses the same training as PhaseC but with skip semantics
-python scripts/training/train_skip_router.py \
-    --traces_dir ${TRACES_DIR} \
-    --output_dir ${OUTPUT_DIR}/checkpoints \
-    --epochs 20 \
-    --batch_size 32 \
-    --lr 1e-3 \
-    --wandb_project ${WANDB_PROJECT} \
-    --wandb_run_name "PhaseD_skip_cot_${TIMESTAMP}" 2>/dev/null || \
+# PhaseD uses the same training as PhaseC (continuous router)
+# The skip semantics are applied at inference time
 python scripts/training/train_continuous_router.py \
-    --traces_dir ${TRACES_DIR} \
+    --trace_dirs ${TRACES_DIR} \
+    --schedule_ids 0 \
     --output_dir ${OUTPUT_DIR}/checkpoints \
-    --epochs 20 \
+    --num_epochs 20 \
     --batch_size 32 \
-    --lr 1e-3 \
-    --wandb_project ${WANDB_PROJECT} \
-    --wandb_run_name "PhaseD_skip_cot_${TIMESTAMP}"
+    --learning_rate 1e-3 \
+    --total_steps 256
 
 echo ""
 echo "=============================================="
 echo "Training Complete"
 echo "=============================================="
-echo "Checkpoint: ${OUTPUT_DIR}/checkpoints/"
+echo "Checkpoint: ${OUTPUT_DIR}/checkpoints/continuous_router_final.pt"

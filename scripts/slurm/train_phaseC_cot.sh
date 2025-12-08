@@ -15,6 +15,7 @@
 # ==============================================================================
 # Train PhaseC Continuous Router for CoT with Base Model Traces
 # ==============================================================================
+# FIXED: train_continuous_router.py requires --trace_dirs and --schedule_ids
 
 set -e
 
@@ -37,10 +38,10 @@ OUTPUT_DIR="experiments/PhaseC_router_cot_${TIMESTAMP}"
 WANDB_PROJECT="dllm_poc_base_200"
 
 mkdir -p ${OUTPUT_DIR}/checkpoints
-mkdir -p ${OUTPUT_DIR}/logs
 mkdir -p logs
 
 export WANDB_PROJECT=${WANDB_PROJECT}
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
 
 echo "=============================================="
 echo "Train PhaseC Continuous Router (CoT - Base Model)"
@@ -50,14 +51,16 @@ echo "Output: ${OUTPUT_DIR}"
 echo "GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)"
 echo "=============================================="
 
+# train_continuous_router.py requires --trace_dirs (plural, list) and --schedule_ids
+# For single schedule training, we use schedule_id=0
 python scripts/training/train_continuous_router.py \
-    --traces_dir ${TRACES_DIR} \
+    --trace_dirs ${TRACES_DIR} \
+    --schedule_ids 0 \
     --output_dir ${OUTPUT_DIR}/checkpoints \
-    --epochs 20 \
+    --num_epochs 20 \
     --batch_size 32 \
-    --lr 1e-3 \
-    --wandb_project ${WANDB_PROJECT} \
-    --wandb_run_name "PhaseC_router_cot_${TIMESTAMP}"
+    --learning_rate 1e-3 \
+    --total_steps 256
 
 echo ""
 echo "=============================================="
