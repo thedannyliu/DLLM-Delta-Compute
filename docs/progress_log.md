@@ -61,3 +61,28 @@ You can adapt field ordering slightly as long as the same information is present
 
 *(Add new entries directly below this line, newest first.)*
 
+### 2025-12-08 05:15 UTC — Phase D/E Implementation Complete
+- Author: AI Assistant
+- Phases / Modules: [Phase D, Phase E, src/skip_router.py, src/flexi_adapter.py, generation_utils.py]
+- Goal:
+  - Implement Phase D (continuous layer skipping) and Phase E (FlexiDepth router+adapter) as specified in master_plan.md v2.
+- Actions:
+  - Created `src/skip_router.py`: SkipRouter extending ContinuousRouter with skip semantics (identity residual instead of cached FFN).
+  - Created `src/flexi_adapter.py`: FlexiAdapter, FlexiRouter, FlexiDepthManager for router+adapter dynamic depth.
+  - Integrated `skip_continuous` and `flexi_ffn` cache modes into `generation_utils.py`.
+  - Created training scripts: `train_skip_router.py`, `train_flexi_adapter.py`.
+  - Created SLURM scripts: `train_phaseD_skip.sh`, `train_phaseE_flexi.sh`, `test_phaseDE.sh`.
+- Status / Outcome:
+  - All Phase D/E code implemented and committed.
+  - Test job 3960463 submitted for minimal validation.
+- Git commits:
+  - `c6a590a` (Phase D/E training scripts and test)
+  - Previous commit (Phase D/E modules and generation_utils integration)
+- SLURM jobs:
+  - `3960463` (test_phaseDE - running)
+- Next steps / TODOs:
+  - Wait for test job to complete and verify imports/forward pass work.
+  - Collect P1 traces on GSM8K CoT for training Phase D/E routers.
+  - Train Phase D skip router from Phase C checkpoint.
+  - Train Phase E FlexiDepth router+adapter.
+
