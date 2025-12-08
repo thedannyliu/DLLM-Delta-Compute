@@ -97,3 +97,40 @@ You can simplify the template for small smoke tests (e.g., 1-step sanity runs) b
 
 *(Add new experiment blocks directly below this line, newest first.)*
 
+### 2025-12-08 00:18 UTC — Phase D/E Minimal Validation Test
+- Phase: Phase D, Phase E
+- Goal: Verify Phase D/E module imports, save/load, and forward pass work correctly.
+- SLURM job id: `3960463`
+- Script: `scripts/slurm/test_phaseDE.sh`
+- Status: **PASSED**
+- Results:
+  - SkipRouter: 35,201 params, 16/32 layers recompute at p=0.5
+  - FlexiDepthManager: 17M params (8 adapted layers × 2M adapter + 305K router)
+  - All save/load and forward pass tests passed
+- Logs: `logs/test_phaseDE_3960463.out`
+
+### 2025-12-03 00:15 UTC — CoT Baseline Evaluation (P0/P1/P2)
+- Phase: P2 Early Stop
+- Goal: Evaluate P2 early stopping with CoT settings (256 steps, 8-shot, 1000 samples).
+- SLURM job id: `3795597`
+- Script: `scripts/slurm/fair_poc_cot_eval.sh`
+- delta_mode: `p2_early_stop`
+- cache_mode: `none`
+- schedule: 256 steps
+- Metrics:
+  - GSM8K CoT flexible-extract: **58.0%** (±1.56%)
+- Logs: `logs/fair_poc_cot_3795597.out`
+- Notes: P0 and P1 may have been skipped or failed; only P2 results visible in logs.
+
+### 2025-12-02 23:12 UTC — Sanity Check (PhaseC Router)
+- Phase: Phase C Continuous Router
+- Goal: Verify PhaseC router is working with 50-sample sanity check.
+- SLURM job id: `3795596`
+- Script: `scripts/slurm/sanity_check_routers.sh`
+- cache_mode: `l2c_continuous`
+- schedule: 128 steps
+- Metrics:
+  - GSM8K flexible-extract: **66.0%** (±6.77%)
+- Logs: `logs/sanity_check_3795596.out`
+- Notes: Router loaded successfully (14,529 params). Only PhaseC ran; P3/PhaseB may have been skipped.
+
